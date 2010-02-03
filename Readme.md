@@ -1,14 +1,16 @@
 Jinqs - JavaScript integrated queries!
 ======================================
 
-Jinqs is a fluent data querying library written in Javascript, providing a simple interface for traversing, sorting, mapping and aggregating information in an efficient manner.
+Jinqs is a fluent data querying library written in Javascript, providing helpers for traversing, 
+sorting, mapping and aggregating information in an concise manner.
 
 A typical Jinqs query looks something like
 
     closest = $jinqs(markers).orderBy(function(m) { return target.distanceFrom(m.getLatLng()); })
-                             .take(count).toArray();
+                             .take(10).toArray();
 
-which iterates a set of [Google Maps](http://code.google.com/apis/maps/) markers and returns the 10 closest to a target location.
+which iterates a set of [Google Maps](http://code.google.com/apis/maps/) markers 
+and returns the 10 closest to a target location.
 
 
 Enumeration
@@ -41,7 +43,7 @@ This continues iterating the method until an 'undefined' value is returned (`ret
     
     var j = $jinqs(fn).select(Math.sqrt).takeWhile(function(v) { return v < 32; }).sum(); //> 21829.1..
 
-An objects properties can also be used as a data sournce, which wraps them into arrays
+An objects properties can also be used as a data source, which wraps them into arrays
 to the effect that `{ id: 12 }` becomes `[['id',12]]`
 
     var value = { id0: [58,39929], id1: [12231,23] };
