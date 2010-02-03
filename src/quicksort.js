@@ -1,10 +1,5 @@
 if(typeof Ken == "undefined") Ken = { };
 
-Function.prototype.bind = function(scope) {
-  var m = this;
-  return function() { return m.apply(scope, arguments); }
-}
-
 Ken.quickSort = function(array, keySelector, comparer, begin, end)
 {
   if(array.toArray) array = array.toArray();
