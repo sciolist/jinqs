@@ -1,6 +1,6 @@
 require 'fileutils'
 sources = ["src/enumerator.js", "src/quicksort.js", "src/jinqs.js"]
-version = File.read("VERSION")
+version = File.read("VERSION").strip
 
 task :default => ["bin/jinqs.#{version}.min.js"]
 
