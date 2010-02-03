@@ -143,7 +143,7 @@ There is also a `selectMany` method, in which an array of values from the transf
 
 ### Joining sources
 
-#### `join(inner, outerKeySelector, innerKeySelector, [resultSelector, outerJoin])`
+#### join(inner, outerKeySelector, innerKeySelector, [resultSelector, outerJoin])
 The `join` method takes elements from the source and maps them against another using key selectors.
 
     var outer = [{ id: 1, name: "jdp" }]
@@ -158,7 +158,7 @@ The `join` method takes elements from the source and maps them against another u
        [ { id: 1, name: "jdp" }, { id: 1, uid: 1, tag: "joiner" },
          { id: 1, name: "jdp" }, { id: 2, uid: 1, tag: "another tag" } ]
 
-#### `groupJoin(inner, outerKeySelector, innerKeySelector, [resultSelector])`
+#### groupJoin(inner, outerKeySelector, innerKeySelector, [resultSelector])
 A grouped join maps the outer values only once, and creates an array of inner results.
 
     var outer = [{ id: 1, name: "jdp" }]
@@ -173,7 +173,7 @@ A grouped join maps the outer values only once, and creates an array of inner re
        [ { user: { id: 1, name: "jdp" }, tags: [ { id: 1, uid: 1, tag: "joiner" }, 
                                                  { id: 2, uid: 1, tag: "another tag" } ]
 
-#### `groupBy(keySelector, [resultSelector])`
+#### groupBy(keySelector, [resultSelector])
 The group by method iterates over itself, making arrays of each value that matches a given key.
 
     var outer = [{ id: 1, name: "jdp", office: 1 }, { id: 2, name: "ej", office: 0 }, { id: 3, name: "be", office: 1 }]
@@ -184,17 +184,17 @@ The group by method iterates over itself, making arrays of each value that match
     [ { office: 0, users: [ { id: 1, name: "jdp", office: 1 }, { id: 3, name: "be", office: 1 } },
       { office: 1, users: [ { id: 2, name: "ej", office: 0 } ] } ]
 
-#### `concat(sequence)`
+#### concat(sequence)
 Concat appends another data source, which will be iterated after the current one.
 
     $jinqs([0,1]).concat([2,3]); //> [0,1,2,3]
 
-#### `intersect(inner, keySelector)`
+#### intersect(inner, keySelector)
 Intersect finds all elements that match the same key selector between two sources.
 
     $jinqs([0,1,2]).intersect([1,2,3]); //> [1,2]
 
-#### `union(inner, keySelector)`
+#### union(inner, keySelector)
 Union finds and returns all values that are distinct among two sources.
 
     $jinqs([0,1,2]).union([1,2,3]); //> [0,1,2,3]
