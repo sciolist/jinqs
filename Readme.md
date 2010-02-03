@@ -83,7 +83,7 @@ otherwise return the new current value.
         }
     });
     
-    $jinqs(enumr).toArray(); // [1, 4, 3, 2, 5, 0]
+    $jinqs(enumr).toArray(); // [5, 4, 3, 2, 1, 0]
 
 
 Method groups
