@@ -16,7 +16,7 @@ Ken.Enumerator = function(args)
 {
   if(!args.current) { args = Ken.Enumerator.basicConfig(args); }
   args.first = args.first || args.reset;
-  this.scope = args.scope || this;
+  this.scope = this;
   this.args = args;
   this._bof = true;
   this._eof = false;
@@ -32,7 +32,9 @@ Ken.Enumerator.prototype = {
     if(!this._bof && !this._eof) { return this.args.current.call(this.scope); }
     return undefined;
   },
-
+  
+  getEnumerator: function() { return this; },
+  
   /// Method: reset
   ///  Sets the enumerator to its initial position.
   reset: function()
@@ -70,6 +72,7 @@ Ken.Enumerator.over = function(obj)
   else if(obj.getEnumerator) { return obj.getEnumerator(); }
   else if(obj instanceof Function) { return Ken.Enumerator.func(obj); }
   else if(obj.length != null) { return Ken.Enumerator.array(obj); }
+  else if(obj.moveNext instanceof Function) { return new Ken.Enumerator(obj); }
   else { return Ken.Enumerator.object(obj); }
 };
 
@@ -83,11 +86,10 @@ Ken.Enumerator.over = function(obj)
 ///  A <Ken.Enumerator> instance over the requested range.
 Ken.Enumerator.range = function(from, to, step)
 {
-  var i = from-1;
   return new Ken.Enumerator({
-    reset:    function() { i = from-1; },
-    current:  function() { return i;   },
-    moveNext: function() { i += step||1; return step<0 ? i>to : i<to; }
+    reset:    function() { this.i = from-1; },
+    current:  function() { return this.i;   },
+    moveNext: function() { this.i += step||1; return step<0 ? this.i>to : this.i<to; }
   });
 };
 
@@ -101,11 +103,10 @@ Ken.Enumerator.range = function(from, to, step)
 Ken.Enumerator.repeat = function(value, count)
 {
   if(arguments.length == 1) { count = value; value = 0; }
-  var i = 0;
   return new Ken.Enumerator({
-    reset:    function() { i = 0;        },
+    reset:    function() { this.i = 0; },
     current:  function() { return value; },
-    moveNext: function() { i++; return i<=count; }
+    moveNext: function() { this.i++; return this.i<=count; }
   });
 };
 
@@ -158,11 +159,11 @@ Ken.Enumerator.object = function(obj)  { return new Ken.Enumerator(Ken.Enumerato
 
 Ken.Enumerator.arrayConfig = function(arr)
 {
-  var i = -1;
   return {
-    reset:    function() { i = -1; },
-    current:  function() { return arr[i]; },
-    moveNext: function() { i++; return arr.length > i; }
+    array:    arr,
+    reset:    function() { this.i = -1; },
+    current:  function() { return arr[this.i]; },
+    moveNext: function() { this.i++; return arr.length > this.i; }
   };
 };
 
@@ -171,53 +172,53 @@ Ken.Enumerator.basicConfig = function(opts)
   var current;
   var done = {};
   
-  return {
-    scope: opts.scope,
-    reset: function() {
-        current = undefined;
-        if(opts.reset) { opts.reset.call(this); }
-    },
-    current: function() { return current; },
-    moveNext: function() { 
-      current = opts.moveNext.call(this, done);
-      if(current === done)
-      {
-        current = undefined;
-        return false;
-      }
-      return true;
-    }
+  var _reset = opts.reset;
+  var _moveNext = opts.moveNext;
+  
+  opts.current = function() { return current; };
+  opts.reset = function() {
+    current = undefined;
+    if(_reset) _reset.call(this);
   };
+  opts.moveNext = function() { 
+    current = _moveNext.call(this, done);
+    if(current === done)
+    {
+      current = undefined;
+      return false;
+    }
+    return true;
+  };
+  
+  return opts;
 };
 
 Ken.Enumerator.funcConfig = function(fn)
 {
-  var current;
   return {
-    reset:    function() { current = undefined; },
-    current:  function() { return current; },
-    moveNext: function() { return (current = fn()) !== undefined; }
+    reset:    function() { this.current = undefined; },
+    current:  function() { return this.current; },
+    moveNext: function() { return (this.current = fn()) !== undefined; }
   };
 };
 
 Ken.Enumerator.objectConfig = function(obj)
 {
-  var i = -1;
-  var data = null;
-  var _reset = function() {
-    data = [];
-    for(var key in obj) {
-      if(obj.hasOwnProperty(key)) { data.push(key); }
-    }
-  };
   return {
-    reset:    function() { data = null; i = -1; },
+    reset: function() { this.i = -1; },
+    first: function() {
+      data = [];
+      for(var key in obj) {
+        if(obj.hasOwnProperty(key)) { data.push(key); }
+      };
+      this.data = data;
+      this.i = -1;
+    },
     moveNext: function(done) {
-      if(data === null) { _reset(); }
-      
-      i+=1;
-      if(data.length <= i) { return done; }
-      return [data[i], obj[data[i]]];
+      this.i+=1;
+      var data = this.data;
+      if(data.length <= this.i) { return done; }
+      return [data[this.i], obj[data[this.i]]];
     }
   };
 };

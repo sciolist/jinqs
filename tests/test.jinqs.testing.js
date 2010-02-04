@@ -21,6 +21,7 @@ test("all: should only fetch elements until a nonmatching value is found.", func
 });
 
 // any(predicate)
+// contains(value)
 test("any: no parameter should imply 'any elements at all'.", function() {
   ok( $jinqs([1]).any(), "");
   ok(!$jinqs([ ]).any(), "");

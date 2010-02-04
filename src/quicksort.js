@@ -1,4 +1,4 @@
-if(typeof Ken == "undefined") Ken = { };
+if(typeof Ken == "undefined") { Ken = { }; }
 
 Ken.quickSort = function(array, keySelector, comparer, begin, end)
 {

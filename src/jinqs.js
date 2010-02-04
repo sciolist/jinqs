@@ -1,4 +1,4 @@
-if(typeof Ken == "undefined") Ken = { };
+if(typeof Ken == "undefined") { Ken = { }; }
 $jinqs = function(data) { return new Ken.Jinqs(data); } 
 
 /// Class: Ken.Jinqs
@@ -10,43 +10,60 @@ $jinqs = function(data) { return new Ken.Jinqs(data); }
 ///  data - The data source to be enumerated, attempts to automatically create an enumerable source from the value.
 Ken.Jinqs = function(data) {
   if(!arguments.length) { data = []; }
-  if(data.getEnumerator) { data = data.getEnumerator(); }
-  if(!(data instanceof Ken.Enumerator)) { data = Ken.Enumerator.over(data); }
   this.data = data;
 };
 
-Ken.Jinqs.prototype = {
-  reset: function() { this.data.reset(); },
-  
+/// Static Method: addMethod
+///  Registers a Jinqs function.
+/// Parameters:
+///  name   - Name of the method to register.
+///  method - Function to invoke when a linqs query is performed.
+Ken.Jinqs.addMethod = function(name, method) {
+  Ken.Jinqs.prototype[name] = function() {
+    var args = [this];
+    for(var i=0; i<arguments.length; ++i) args.push(arguments[i]);
+    return method.apply(this, args);
+  }
+};
+
+/// Static Method: addMethods
+///  Registers a set of Jinqs functions.
+/// Parameters:
+///  source - An object containing the Jinqs functions to add.
+Ken.Jinqs.addMethods = function(source) {
+  for(var item in source) {
+    if(source.hasOwnProperty(item)) {
+      Ken.Jinqs.addMethod(item, source[item]);
+    }
+  }
+};
+
+Ken.Jinqs.addMethods({
   /// Method: getEnumerator
   ///  Gets the underlying <Ken.Enumerator> to iterate the expression results.
   /// Returns:
   ///  A <Ken.Enumerator> iterating over the sequence.
-  getEnumerator: function() { return this.data; },
+  getEnumerator: function(source) { return Ken.Enumerator.over(source.data); },
   
   /// Method: each
   ///  Executes a method over every item in the sequence.
   /// Parameters:
   ///  predicate - The method target for invocations, enumeration halts if the method returns false.
-  each: function(predicate)
-  {
-    var enumr = this.getEnumerator();
+  each: function(source, predicate) {
+    var enumr = source.getEnumerator();
     while(enumr.moveNext() && predicate(enumr.current()) !== false) { }
-    enumr.reset();
   },
   
   /// Method: toArray
   ///  Creates an array of the sequences data.
   /// Returns:
   ///  An array with the elements from the sequence.
-  toArray: function()
-  {
+  toArray: function(source) {
     var result = [];
-    var enumr = this.getEnumerator();
+    var enumr = source.getEnumerator();
     while(enumr.moveNext()) {
       result.push(enumr.current());
     }
-    enumr.reset();
     return result;
   },
   
@@ -58,10 +75,9 @@ Ken.Jinqs.prototype = {
   ///  requireUniqueKeys - Indicates whether a test should be performed to ensure uniqueness of keys.
   /// Returns:
   ///  An object containing values from the sequence, retrievable by their key.
-  toObject: function(keySelector, valueSelector, requireUniqueKeys)
-  {
+  toObject: function(source, keySelector, valueSelector, requireUniqueKeys) {
     var result = {};
-    var enumr = this.getEnumerator();
+    var enumr = source.getEnumerator();
     while(enumr.moveNext()) {
       var item = enumr.current();
       var key = keySelector?keySelector(item):item;
@@ -71,7 +87,6 @@ Ken.Jinqs.prototype = {
       }
       result[key] = value;
     }
-    enumr.reset();
     return result;
   },
   
@@ -83,10 +98,9 @@ Ken.Jinqs.prototype = {
   ///  valueSelector - A method which selects a value from each element. (optional)
   /// Returns:
   ///  An object containing arrays of values from the sequence, retrievable by their key.
-  toLookup: function(keySelector, valueSelector)
-  {
+  toLookup: function(source, keySelector, valueSelector) {
     var result = {};
-    var enumr = this.getEnumerator();
+    var enumr = source.getEnumerator();
     while(enumr.moveNext()) {
       var item = enumr.current();
       var key = keySelector?keySelector(item):item;
@@ -94,7 +108,6 @@ Ken.Jinqs.prototype = {
       if(!result[key]) { result[key] = []; }
       result[key].push(value);
     }
-    enumr.reset();
     return result;
   },
   
@@ -105,28 +118,25 @@ Ken.Jinqs.prototype = {
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance that will sort the data on initialization.
-  orderBy: function(keySelector, comparer)
-  {
-    var results = null;
+  orderBy: function(keySelector, comparer) {
     if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
-    var query = new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
+    
+    var query = new Ken.Jinqs({
       reset: function() {
-        if(results) { results.reset(); }
-        this.reset();
+        if(this.inner) { this.inner.reset(); }
       },
       moveNext: function(done) {
-        if(results === null) {
+        if(this.inner === null) {
           var prepared = this.select(function(item) { return [keySelector?keySelector(item):item, item]; });
           var sorted = Ken.quickSort(prepared, function(i){return i[0];}, comparer);
-          results = new Ken.Jinqs(sorted).select(function(i) { return i[1]; }).getEnumerator();
+          this.inner = new Ken.Jinqs(sorted).select(function(i) { return i[1]; }).getEnumerator();
         }
-        while(results.moveNext()) {
-          return results.current();
+        while(this.inner.moveNext()) {
+          return this.inner.current();
         }
         return done;
       }
-    }));
+    });
     query.orderByMethod = keySelector;
     query.orderByComparer = comparer;
     return query;
@@ -139,10 +149,9 @@ Ken.Jinqs.prototype = {
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance that will sort the data in descending order on initialization.
-  orderByDesc: function(keySelector, comparer)
-  {
+  orderByDesc: function(source, keySelector, comparer) {
     if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
-    return this.orderBy(keySelector, function(a, b){ return -comparer(a, b); });
+    return source.orderBy(keySelector, function(a, b){ return -comparer(a, b); });
   },
   
   /// Method: thenBy
@@ -152,13 +161,12 @@ Ken.Jinqs.prototype = {
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance that will sort the data on initialization.
-  thenBy: function(keySelector, comparer)
-  {
-    if(!this.orderByComparer) { return this.orderBy(keySelector, comparer); }
+  thenBy: function(source, keySelector, comparer) {
+    if(!source.orderByComparer) { return source.orderBy(keySelector, comparer); }
     if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
     
-    var oldMethod = this.orderByMethod;
-    var oldComparer = this.orderByComparer;
+    var oldMethod = source.orderByMethod;
+    var oldComparer = source.orderByComparer;
     var newComparer = function(a, b, dataA, dataB) {
       var oldA = oldMethod(dataA[1]);
       var oldB = oldMethod(dataB[1]);
@@ -168,7 +176,7 @@ Ken.Jinqs.prototype = {
       }
       return result;
     };
-    return this.orderBy(keySelector, newComparer);
+    return source.orderBy(keySelector, newComparer);
   },
   
   /// Method: thenByDesc
@@ -178,10 +186,9 @@ Ken.Jinqs.prototype = {
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance that will sort the data in descending order on initialization.
-  thenByDesc: function(keySelector, comparer)
-  {
+  thenByDesc: function(source, keySelector, comparer) {
     if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
-    return this.thenBy(keySelector, function(a, b){ return -comparer(a, b); });
+    return source.thenBy(keySelector, function(a, b){ return -comparer(a, b); });
   },
   
   /// Method: any
@@ -190,12 +197,9 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test each element against. (optional)
   /// Returns:
   ///  true if an element was found that matched the predicate, otherwise false.
-  any: function(predicate)
-  {
-    var enumr = this.where(predicate).getEnumerator();
-    var found = enumr.moveNext();
-    enumr.reset();
-    return found;
+  any: function(source, predicate) {
+    var enumr = source.where(predicate).getEnumerator();
+    return enumr.moveNext();
   },
   
   /// Method: all
@@ -204,9 +208,8 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test each element against.
   /// Returns:
   ///  true if all elements matched the predicate, otherwise false.
-  all: function(predicate)
-  {
-    return !this.where(function(item) { return !predicate(item); }).any();
+  all: function(source, predicate) {
+    return !source.where(function(item) { return !predicate(item); }).any();
   },
   
   /// Method: contains
@@ -215,9 +218,8 @@ Ken.Jinqs.prototype = {
   ///  value - The element to attempt to find.
   /// Returns:
   ///  true if the element was found, otherwise false.
-  contains: function(value)
-  {
-    return this.any(function(item) { return item == value; });
+  contains: function(source, value) {
+    return source.any(function(item) { return item == value; });
   },
   
   /// Method: distinct
@@ -226,14 +228,22 @@ Ken.Jinqs.prototype = {
   ///  uniqueKeySelector - A method to extract the key to judge distinctness by. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance over all distinct elements that were found.
-  distinct: function(uniqueKeySelector)
-  {
-    var keys = {};
-    return this.where(function(item) {
-      var key = (uniqueKeySelector ? uniqueKeySelector(item) : item);
-      if(keys.hasOwnProperty(key)) { return false; }
-      keys[key] = true;
-      return true;
+  distinct: function(source, uniqueKeySelector) {
+    return new Ken.Jinqs({
+      first: function() {
+        this.inner = source.getEnumerator();
+        this.keys = { }
+      },
+      moveNext: function(done) {
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
+          var key = (uniqueKeySelector ? uniqueKeySelector(item) : item);
+          if(this.keys.hasOwnProperty(key)) { continue; }
+          this.keys[key] = true;
+          return item;
+        };
+        return done;
+      }
     });
   },
   
@@ -244,32 +254,30 @@ Ken.Jinqs.prototype = {
   ///  defaultValue - A value to return if there was no element at the index. (optional)
   /// Returns:
   ///  The element at the specified index, or the default value if one was supplied.
-  elementAt: function(index, defaultValue)
-  {
+  elementAt: function(source, index, defaultValue) {
     if(index < 0) { return defaultValue; }
-    return this.skip(index).first(null, defaultValue);
+    return source.skip(index).first(null, defaultValue);
   },
   
   /// Method: select
   ///  Maps each element into a new value using a selection method.
   /// Parameters:
-  ///  selector - A transform function to apply to each element of the sequence.
+  ///  transform - A transform function to apply to each element of the sequence.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the mapped results of the sequence.
-  select: function(selector)
-  {
-    if(!selector) { return new Ken.Jinqs(this); }
-    var data = null;
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset: function() { data = null; this.reset(); },
-      current: function() { return data || (data = selector(this.data.current())); },
+  select: function(source, transform) {
+    if(!transform) { return new Ken.Jinqs(source); }
+    
+    return new Ken.Jinqs({
+      first: function() { this.inner = source.getEnumerator(); },
       moveNext: function(done) {
-        data = null;
-        while(this.data.moveNext()) { return true; }
-        return false;
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
+          return transform ? transform(item) : item;
+        };
+        return done;
       }
-    }));
+    });
   },
   
   /// Method: select
@@ -278,22 +286,19 @@ Ken.Jinqs.prototype = {
   ///  selector - A transform function to apply to each element of the sequence. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance over the flattened and mapped results of the sequence.
-  selectMany: function(selector)
-  {
-    var i = 0;
-    var enumr = this.select(selector).getEnumerator();
-    return new Ken.Jinqs(new Ken.Enumerator({
-      reset:    function() { enumr.reset(); i = 0; },
+  selectMany: function(source, transform) {
+    return new Ken.Jinqs({
+      first: function() { this.i = 0; this.inner = source.select(transform).getEnumerator(); },
       moveNext: function(done) {
-        var item = enumr.current();
-        while(!item || !item.length || i>=item.length) {
-          if(!enumr.moveNext()) { return done; }
-          item = selector ? selector(enumr.current()) : enumr.current();
-          i = 0;
-        }
-        return item[i++];
+        var item = this.inner.current();
+        while(!item || !item.length || this.i>=item.length) {
+          if(!this.inner.moveNext()) { return done; }
+          item = this.inner.current();
+          this.i = 0;
+        };
+        return item[this.i++];
       }
-    }));
+    });
   },
   
   /// Method: concat
@@ -302,18 +307,20 @@ Ken.Jinqs.prototype = {
   ///  sequence - The sequence to be concatenate into the result, this can be any enumerable source.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the concatenated elements of the sequence.
-  concat: function(sequence)
-  {
-    var enumr = sequence.moveNext ? sequence : Ken.Enumerator.over(sequence);
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset: function() { this.reset(); enumr.reset(); },
+  concat: function(source, sequence) {
+    if(!sequence) { return new Ken.Jinqs(source); }
+    
+    return new Ken.Jinqs({
+      first: function() {
+        this.inner = source.getEnumerator();
+        this.outer = Ken.Enumerator.over(sequence);
+      },
       moveNext: function(done) {
-        while(this.data.moveNext()) { return this.data.current(); }
-        while(enumr.moveNext()) { return enumr.current(); }
+        while(this.inner.moveNext()) { return this.inner.current(); }
+        while(this.outer.moveNext()) { return this.outer.current(); }
         return done;
       }
-    }));
+    });
   },
   
   /// Method: where
@@ -322,22 +329,19 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test whether an element should be included.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the filtered elements.
-  where: function(predicate)
-  {
-    var i = 0;
-    if(!predicate) { return new Ken.Jinqs(this); }
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset: function() { this.reset(); i = 0; },
-      moveNext: function(done, i) {
-        while(this.data.moveNext())
-        {
-          var item = this.data.current();
-          if(predicate(item, i++)) { return item; }
-        }
+  where: function(source, predicate) {
+    if(!predicate) { return new Ken.Jinqs(source); }
+    
+    return new Ken.Jinqs({
+      first: function() { this.inner = source.getEnumerator(); },
+      moveNext: function(done) {
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
+          if(!predicate || predicate(item)) { return item; }
+        };
         return done;
       }
-    }));
+    })
   },
   
   /// Method: first
@@ -347,15 +351,11 @@ Ken.Jinqs.prototype = {
   ///  defaultValue - A value to return if there was no element at the index. (optional)
   /// Returns:
   ///  The first element which matches the predicate, or the default value if one was supplied.
-  first: function(predicate, defaultValue)
-  {
-    var enumr = this.where(predicate).getEnumerator();
+  first: function(source, predicate, defaultValue) {
+    var enumr = source.where(predicate).getEnumerator();
     while(enumr.moveNext()) {
-      var result = enumr.current();
-      enumr.reset();
-      return result;
+      return enumr.current();
     }
-    enumr.reset();
     return defaultValue;
   },
   
@@ -366,12 +366,14 @@ Ken.Jinqs.prototype = {
   ///  defaultValue - A value to return if there was no element at the index. (optional)
   /// Returns:
   ///  The last element which matches the predicate, or the default value if one was supplied.
-  last: function(predicate, defaultValue)
-  {
+  last: function(source, predicate, defaultValue) {
     var last = null;
-    var enumr = this.where(predicate).getEnumerator();
-    while(enumr.moveNext()) { last = enumr.current(); }
-    enumr.reset();
+    var enumr = source.where(predicate).getEnumerator();
+    if(!enumr.moveNext()) { return defaultValue; }
+    
+    do {
+      last = enumr.current();
+    } while(enumr.moveNext());
     return last;
   },
   
@@ -379,29 +381,24 @@ Ken.Jinqs.prototype = {
   ///  Inverts the order of the elements in the sequence.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the elements in the current sequence in reverse order.
-  reverse: function()
-  {
-    var result = null;
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset: function() {
-        if(result) { result.reset(); }
-        this.reset();
+  reverse: function(source) {
+    return new Ken.Jinqs({
+      first: function() {
+        if(this.inner) { this.inner.reset(); return; };
+        var arr = [];
+        var enumr = source.getEnumerator();
+        while(enumr.moveNext()) {
+          arr.unshift(enumr.current());
+        }
+        this.inner = new Ken.Enumerator(arr);
       },
       moveNext: function(done) {
-        if(result === null) {
-          var arr = [];
-          var enumr = this.getEnumerator();
-          while(enumr.moveNext()) { arr.unshift(enumr.current()); }
-          enumr.reset();
-          result = new Ken.Enumerator(arr);
-        }
-        while(result.moveNext()) {
-          return result.current();
+        while(this.inner.moveNext()) {
+          return this.inner.current();
         }
         return done;
       }
-    }));
+    });
   },
   
   /// Method: takeWhile
@@ -410,22 +407,19 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test each element against.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the elements before the predicate stopped matching.
-  takeWhile: function(predicate)
-  {
-    var i = 0;
-    if(!predicate) { return new Ken.Jinqs(this); }
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset:    function() { i = 0; this.reset(); },
+  takeWhile: function(source, predicate) {
+    if(!predicate) { return new Ken.Jinqs(this.data); }
+    return new Ken.Jinqs({
+      first: function() { this.i = 0; this.inner = source.getEnumerator(); },
       moveNext: function(done) {
-        while(this.data.moveNext()) {
-          var item = this.data.current();
-          if(!predicate(item, i++)) { return done; }
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
+          if(!predicate(item, this.i++)) { return done; }
           return item;
         }
         return done;
       }
-    }));
+    });
   },
   
   /// Method: skipWhile
@@ -434,25 +428,26 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test each element against.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the elements after the predicate stopped matching.
-  skipWhile: function(predicate)
-  {
-    var skipping = true;
-    if(!predicate) { return new Ken.Jinqs(); }
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset: function() { skipping = true; this.reset(); },
+  skipWhile: function(source, predicate) {
+    if(!predicate) { return new Ken.Jinqs(this.data); }
+    return new Ken.Jinqs({
+      first: function() {
+        this.i = 0;
+        this.skipping = true;
+        this.inner = source.getEnumerator();
+      },
       moveNext: function(done) {
-        while(this.data.moveNext()) {
-          var item = this.data.current();
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
           if(!skipping) { return item; }
-          if(predicate(item)) { continue; }
+          if(predicate(item, this.i++)) { continue; }
           
-          skipping = false;
+          this.skipping = false;
           return item;
         }
         return done;
       }
-    }));
+    });
   },
   
   /// Method: take
@@ -461,19 +456,18 @@ Ken.Jinqs.prototype = {
   ///  count - The maximum number of elements to return.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the supplied amount of elements from the sequence.
-  take: function(count)
-  {
-    var i = 0;
-    var current = null;
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset:    function() { i = 0; this.reset(); current = null; },
-      current:  function() { return this.data.current(); },
+  take: function(source, count) {
+    return new Ken.Jinqs({
+      first: function() {
+        this.i = 0;
+        this.inner = source.getEnumerator();
+      },
+      current:  function() { return this.inner.current(); },
       moveNext: function() {
-        if(i++ >= count) { return false; }
-        return this.data.moveNext();
+        if(this.i++ >= count) { return false; }
+        return this.inner.moveNext();
       }
-    }));
+    });
   },
   
   /// Method: skip
@@ -482,19 +476,18 @@ Ken.Jinqs.prototype = {
   ///  count - The maximum number of elements to skip.
   /// Returns:
   ///  A <Ken.Jinqs> instance over the elements after those that were skipped.
-  skip: function(count)
-  {
-    var i = 0;
-    var current = null;
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset:    function() { i = 0; this.reset(); current = null; },
-      current:  function() { return this.data.current(); },
+  skip: function(source, count) {
+    return new Ken.Jinqs({
+      first: function() {
+        this.i = 0;
+        this.inner = source.getEnumerator();
+      },
+      current:  function() { return this.inner.current(); },
       moveNext: function() {
-        while(i++ < count) { this.data.moveNext(); }
-        return this.data.moveNext();
+        while(this.i++ < count) { this.inner.moveNext(); }
+        return this.inner.moveNext();
       }
-    }));
+    });
   },
   
   /// Method: aggregate
@@ -505,14 +498,12 @@ Ken.Jinqs.prototype = {
   ///  resultSelector - A function that transforms the results of the accumulation.
   /// Returns:
   ///  The final accumulator value.
-  aggregate: function(seed, accumulator, resultSelector)
-  {
-    if(seed instanceof Function) { return this.aggregate(0, seed, accumulator); }
-    var enumr = this.getEnumerator();
+  aggregate: function(source, seed, accumulator, resultSelector) {
+    if(seed instanceof Function) { return source.aggregate(0, seed, accumulator); }
+    var enumr = source.getEnumerator();
     while(enumr.moveNext()) {
       seed = accumulator(seed, enumr.current());
     }
-    enumr.reset();
     return resultSelector ? resultSelector(seed) : seed;
   },
   
@@ -522,9 +513,9 @@ Ken.Jinqs.prototype = {
   ///  predicate - A function to test each element against. (optional)
   /// Returns:
   ///  The amount of elements that matched the predicate.
-  count: function(predicate)
-  {
-    return this.where(predicate).aggregate(function(c, n){ return c + 1; });
+  count: function(source, predicate) {
+    if(!predicate && source.data.length) return source.data.length;
+    return source.where(predicate).aggregate(function(c, n){ return c + 1; });
   },
   
   /// Method: sum
@@ -533,9 +524,8 @@ Ken.Jinqs.prototype = {
   ///  selector - A transform function to get the accumulation value for an element. (optional)
   /// Returns:
   ///  The final summed result of the accumulation.
-  sum: function(selector)
-  {
-    return this.select(selector).aggregate(function(c, n){return c + n; });
+  sum: function(source, selector) {
+    return source.select(selector).aggregate(function(c, n){return c + n; });
   },
   
   /// Method: min
@@ -544,9 +534,8 @@ Ken.Jinqs.prototype = {
   ///  selector - A transform function to get the value of an element. (optional)
   /// Returns:
   ///  The lowest value that was returned by the selector.
-  min: function(selector)
-  {
-    return this.select(selector).aggregate(Infinity, Math.min);
+  min: function(source, selector) {
+    return source.select(selector).aggregate(Infinity, Math.min);
   },
   
   /// Method: max
@@ -555,9 +544,8 @@ Ken.Jinqs.prototype = {
   ///  selector - A transform function to get the value of an element. (optional)
   /// Returns:
   ///  The highest value that was returned by the selector.
-  max: function(selector)
-  {
-    return this.select(selector).aggregate(-Infinity, Math.max);
+  max: function(source, selector) {
+    return source.select(selector).aggregate(-Infinity, Math.max);
   },
   
   /// Method: average
@@ -566,10 +554,9 @@ Ken.Jinqs.prototype = {
   ///  selector - A transform function to get the value of an element. (optional)
   /// Returns:
   ///  The average of all the values that were returned by the selector.
-  average: function(selector)
-  {
+  average: function(source, selector) {
     var count = 0;
-    var sum = this.select(selector).aggregate(function(c, n) { count++; return c + n; });
+    var sum = source.select(selector).aggregate(function(c, n) { count++; return c + n; });
     return sum / count;
   },
   
@@ -582,11 +569,10 @@ Ken.Jinqs.prototype = {
   ///  resultSelector   - A function that creates a result from the outer element and an array of inner results. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance over the joined results of the sequences.
-  groupJoin: function(inner, outerKeySelector, innerKeySelector, resultSelector)
-  {
+  groupJoin: function(source, inner, outerKeySelector, innerKeySelector, resultSelector) {
     var grouper = function(item) { return outerKeySelector(item[0]); };
-  
-    var joined = this.join(inner, outerKeySelector, innerKeySelector, null, true);
+    var joined = source.join(inner, outerKeySelector, innerKeySelector, null, true);
+    
     return joined.groupBy(grouper, function(data) {
       var item = data[1];
       var query = new Ken.Jinqs(item);
@@ -595,7 +581,7 @@ Ken.Jinqs.prototype = {
       var innerValues = query.select(function(i){ return i[1]; }).where(function(i){ return i !== null; });
       return resultSelector ? resultSelector(outerValue, innerValues.toArray()) : [outerValue, innerValues.toArray()];
     });
-  },
+  }, 
   
   /// Method: groupBy
   ///  Groups the elements of the sequence based on a key selector.
@@ -604,26 +590,21 @@ Ken.Jinqs.prototype = {
   ///  resultSelector - A function that creates a result for each group. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance where each value is a group of elements with matching keys.
-  groupBy: function(keySelector, resultSelector)
-  {
-    var results = null;
-    return new Ken.Jinqs(new Ken.Enumerator({
-      scope: this,
-      reset:    function() { 
-        if(results) { results.reset(); }
-        this.reset();
+  groupBy: function(source, keySelector, resultSelector) {
+    return new Ken.Jinqs({
+      first: function() {
+        if(this.inner) { this.inner.reset(); return; }
+        var lookup = source.toLookup(keySelector);
+        this.inner = Ken.Enumerator.object(lookup);
       },
       moveNext: function(done) {
-        if(results === null) {
-          var lookup = this.toLookup(keySelector);
-          results = Ken.Enumerator.object(lookup);
-        }
-        while(results.moveNext()) {
-          return resultSelector ? resultSelector(results.current()) : results.current();
+        while(this.inner.moveNext()) {
+          var item = this.inner.current();
+          return resultSelector ? resultSelector(item) : item;
         }
         return done;
       }
-    }));
+    });
   },
   
   /// Method: union
@@ -633,9 +614,8 @@ Ken.Jinqs.prototype = {
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
   ///  A <Ken.Jinqs> instance over each distinct value from the sequences.
-  union: function(inner, keySelector)
-  {
-    return this.concat(inner, keySelector).distinct(keySelector);
+  union: function(source, inner, keySelector) {
+    return source.concat(inner, keySelector).distinct(keySelector);
   },
   
   /// Method: intersect
@@ -645,9 +625,8 @@ Ken.Jinqs.prototype = {
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
   ///  A <Ken.Jinqs> instance over each distinct value that exists in both sequences.
-  intersect: function(inner, keySelector)
-  {
-    return this.join(inner, keySelector, keySelector, function(a, b) { return a; }).distinct(keySelector);
+  intersect: function(source, inner, keySelector) {
+    return source.join(inner, keySelector, keySelector, function(a, b) { return a; }).distinct(keySelector);
   },
   
   /// Method: join
@@ -658,8 +637,7 @@ Ken.Jinqs.prototype = {
   ///  innerKeySelector - A function to extract the key from the inner sequence. (optional)
   ///  resultSelector   - A function that creates a result from the outer element and an array of inner results. (optional)
   ///  outerJoin        - Indicates whether elements from the current sequence with no matching elements should be returned.
-  join: function(inner, outerKeySelector, innerKeySelector, resultSelector, outerJoin)
-  {
+  join: function(source, inner, outerKeySelector, innerKeySelector, resultSelector, outerJoin) {
     var innerKeys = null;
     return this.select(function(item) {
       if (innerKeys === null) { innerKeys = new Ken.Jinqs(inner).toLookup(innerKeySelector); }
@@ -678,4 +656,4 @@ Ken.Jinqs.prototype = {
       return result;
     }).selectMany();
   }
-};
+});

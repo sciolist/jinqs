@@ -28,16 +28,6 @@ test("distinct: single repeated element should be returned once.", function() {
 
 
 // where(predicate)
-test("where: filtered items should remain after reset.", function() {
-  var arr = [0,9,1,0,2];
-  var j = $jinqs(arr);
-
-  var set = j.where(function(i) { return i > 1; });
-  same(set.toArray(), [9, 2]);
-
-  set.reset();
-  same(set.toArray(), [9, 2]);
-});
 
 test("where: repeat wheres should filter subset.", function()
 {
@@ -45,10 +35,7 @@ test("where: repeat wheres should filter subset.", function()
   var j = $jinqs(arr);
 
   var set = j.where(function(i) { return i > 1; })
-          .where(function(i) { return i < 5; });
-  same(set.toArray(), [2]);
-
-  set.reset();
+             .where(function(i) { return i < 5; });
   same(set.toArray(), [2]);
 });
 
@@ -115,3 +102,10 @@ test("takeWhile: should stop at end of data.", function() {
 });
 
 // reset()
+
+
+
+
+
+
+
