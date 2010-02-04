@@ -1,8 +1,8 @@
 Jinqs - JavaScript integrated queries!
 ======================================
 
-Jinqs is a fluent data querying library written in Javascript, providing helpers for traversing, 
-sorting, mapping and aggregating information in an concise manner.
+Jinqs is a fluent data querying library in the spirit of [LINQ](http://en.wikipedia.org/wiki/Language_Integrated_Query) written in Javascript, 
+providing helpers for traversing, sorting, mapping and aggregating information in an concise manner.
 
 A typical Jinqs query looks something like
 
