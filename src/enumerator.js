@@ -196,9 +196,9 @@ Ken.Enumerator.basicConfig = function(opts)
 Ken.Enumerator.funcConfig = function(fn)
 {
   return {
-    reset:    function() { this.current = undefined; },
-    current:  function() { return this.current; },
-    moveNext: function() { return (this.current = fn()) !== undefined; }
+    reset:    function() { this._current = undefined; },
+    current:  function() { return this._current; },
+    moveNext: function() { return (this._current = fn()) !== undefined; }
   };
 };
 
