@@ -118,7 +118,7 @@ Ken.Jinqs.addMethods({
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
   ///  A <Ken.Jinqs> instance that will sort the data on initialization.
-  orderBy: function(keySelector, comparer) {
+  orderBy: function(source, keySelector, comparer) {
     if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
     
     var query = new Ken.Jinqs({
@@ -126,8 +126,8 @@ Ken.Jinqs.addMethods({
         if(this.inner) { this.inner.reset(); }
       },
       moveNext: function(done) {
-        if(this.inner === null) {
-          var prepared = this.select(function(item) { return [keySelector?keySelector(item):item, item]; });
+        if(!this.inner) {
+          var prepared = source.select(function(item) { return [keySelector?keySelector(item):item, item]; });
           var sorted = Ken.quickSort(prepared, function(i){return i[0];}, comparer);
           this.inner = new Ken.Jinqs(sorted).select(function(i) { return i[1]; }).getEnumerator();
         }

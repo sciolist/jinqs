@@ -12,8 +12,7 @@ if(typeof Ken == "undefined") Ken = { };
 ///  reset - A method that resets the state of the enumerator. (optional)
 ///  current - A method that returns the current value of the data source. (optional, see <Ken.Enumerator.basic> for details)
 ///  moveNext - A method that iterates over the source, returning true while more data is available. (see <Ken.Enumerator.basic> if no current value is supplied)
-Ken.Enumerator = function(args)
-{
+Ken.Enumerator = function(args) {
   if(!args.current) { args = Ken.Enumerator.basicConfig(args); }
   args.first = args.first || args.reset;
   this.scope = this;
@@ -27,8 +26,7 @@ Ken.Enumerator.prototype = {
   ///  Gets the current element in the data source.
   /// Returns:
   ///  The current element in the data source.
-  current: function()
-  {
+  current: function() {
     if(!this._bof && !this._eof) { return this.args.current.call(this.scope); }
     return undefined;
   },
@@ -37,8 +35,7 @@ Ken.Enumerator.prototype = {
   
   /// Method: reset
   ///  Sets the enumerator to its initial position.
-  reset: function()
-  {
+  reset: function() {
     if(this._bof) return;
     this._bof = true;
     this._eof = false;
@@ -49,8 +46,7 @@ Ken.Enumerator.prototype = {
   ///  Advances the enumerator to the next element of the data source.
   /// Returns:
   ///  true if the enumerator advanced successfully, false if the enumerator has passed its last element.
-  moveNext: function()
-  {
+  moveNext: function() {
     if(this._bof) {
       this.args.first.call(this.scope);
       this._bof = false;
@@ -66,8 +62,7 @@ Ken.Enumerator.prototype = {
 ///  obj - The source to attempt to enumerate.
 /// Returns:
 ///  A <Ken.Enumerator> instance over the supplied object.
-Ken.Enumerator.over = function(obj)
-{
+Ken.Enumerator.over = function(obj) {
   if(obj instanceof Ken.Enumerator) { return obj; }
   else if(obj.getEnumerator) { return obj.getEnumerator(); }
   else if(obj instanceof Function) { return Ken.Enumerator.func(obj); }
@@ -84,8 +79,7 @@ Ken.Enumerator.over = function(obj)
 ///  step - The amount to increase or decrease with each step.
 /// Returns:
 ///  A <Ken.Enumerator> instance over the requested range.
-Ken.Enumerator.range = function(from, to, step)
-{
+Ken.Enumerator.range = function(from, to, step) {
   return new Ken.Enumerator({
     reset:    function() { this.i = from-1; },
     current:  function() { return this.i;   },
@@ -100,8 +94,7 @@ Ken.Enumerator.range = function(from, to, step)
 ///  count - The amount of times to return the item.
 /// Returns:
 ///  A <Ken.Enumerator> instance which returns the requested value.
-Ken.Enumerator.repeat = function(value, count)
-{
+Ken.Enumerator.repeat = function(value, count) {
   if(arguments.length == 1) { count = value; value = 0; }
   return new Ken.Enumerator({
     reset:    function() { this.i = 0; },
@@ -116,7 +109,9 @@ Ken.Enumerator.repeat = function(value, count)
 ///  arr  - The array to iterate over.
 /// Returns:
 ///  A <Ken.Enumerator> instance over the array.
-Ken.Enumerator.array  = function(arr)  { return new Ken.Enumerator(Ken.Enumerator.arrayConfig(arr));  };
+Ken.Enumerator.array  = function(arr)  {
+  return new Ken.Enumerator(Ken.Enumerator.arrayConfig(arr));
+};
 
 /// Static Method: basic
 ///  Creates a new enumeration over a configuration object with an implied 'current' method (see remarks).
@@ -139,7 +134,9 @@ Ken.Enumerator.array  = function(arr)  { return new Ken.Enumerator(Ken.Enumerato
 ///  an infinite enumeration, such as by supplying:
 ///  >  moveNext: function() { return ++i; }
 ///  would make the method iterate values as long as they are requested.
-Ken.Enumerator.basic  = function(opts) { return new Ken.Enumerator(Ken.Enumerator.basicConfig(opts)); };
+Ken.Enumerator.basic  = function(opts) {
+  return new Ken.Enumerator(Ken.Enumerator.basicConfig(opts));
+};
 
 /// Static Method: func
 ///  Creates a new enumeration over a function, returning its values while it returns values.
@@ -147,7 +144,9 @@ Ken.Enumerator.basic  = function(opts) { return new Ken.Enumerator(Ken.Enumerato
 ///  fn - The method to iterate over.
 /// Returns:
 ///  A <Ken.Enumerator> instance which will invoke the supplied method when iterated.
-Ken.Enumerator.func   = function(fn)   { return new Ken.Enumerator(Ken.Enumerator.funcConfig(fn));    };
+Ken.Enumerator.func   = function(fn)   {
+  return new Ken.Enumerator(Ken.Enumerator.funcConfig(fn));
+};
 
 /// Static Method: object
 ///  Creates a new enumeration over an objects properties.
@@ -155,10 +154,11 @@ Ken.Enumerator.func   = function(fn)   { return new Ken.Enumerator(Ken.Enumerato
 ///  obj - An object to iterate properties from.
 /// Returns:
 ///  A <Ken.Enumerator> instance which will iterate over properties from the object.
-Ken.Enumerator.object = function(obj)  { return new Ken.Enumerator(Ken.Enumerator.objectConfig(obj)); };
+Ken.Enumerator.object = function(obj)  {
+  return new Ken.Enumerator(Ken.Enumerator.objectConfig(obj));
+};
 
-Ken.Enumerator.arrayConfig = function(arr)
-{
+Ken.Enumerator.arrayConfig = function(arr) {
   return {
     array:    arr,
     reset:    function() { this.i = -1; },
@@ -167,8 +167,7 @@ Ken.Enumerator.arrayConfig = function(arr)
   };
 };
 
-Ken.Enumerator.basicConfig = function(opts)
-{
+Ken.Enumerator.basicConfig = function(opts) {
   var current;
   var done = {};
   
@@ -193,17 +192,15 @@ Ken.Enumerator.basicConfig = function(opts)
   return opts;
 };
 
-Ken.Enumerator.funcConfig = function(fn)
-{
+Ken.Enumerator.funcConfig = function(fn) {
   return {
-    reset:    function() { this._current = undefined; },
+    reset:    function() { this._scope = {}; this._current = undefined; },
     current:  function() { return this._current; },
-    moveNext: function() { return (this._current = fn()) !== undefined; }
+    moveNext: function() { return (this._current = fn.apply(this._scope)) !== undefined; }
   };
 };
 
-Ken.Enumerator.objectConfig = function(obj)
-{
+Ken.Enumerator.objectConfig = function(obj) {
   return {
     reset: function() { this.i = -1; },
     first: function() {

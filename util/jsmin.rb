@@ -12,7 +12,7 @@
 # based.
 #
 # /* jsmin.c
-#    2003-04-21
+#  2003-04-21
 #
 # Copyright (c) 2002 Douglas Crockford  (www.crockford.com)
 #
@@ -36,194 +36,201 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 class JSMin
-	def self.minify sources
-	    JSMin.new(sources).minify
-	end
-	
-	def initialize sources = []
-		@in = StringIO.new
-		add_file sources
-	end
-	
-	def add_file obj
-	    if obj.is_a? Array
-	        obj.each{|f|add_file(f)}
-		elsif obj.respond_to? :read
-			add obj.read
-		else
-			add File.read(obj)
-		end
-	end
-	
-	def add obj
-		if obj.respond_to? :read
-			@in.write obj.read
-		else
-			@in.write obj
-		end
-	end
-	
-	def minify
-		@in.rewind
-		@out = StringIO.new
-		inner_read
-		@in.rewind
-		@out.rewind
-		output = @out.read
-		@out.close
-		output
-	end
-	
-	private
-    EOF = -1
-    @theA = ""
-    @theB = ""
+  def self.minify sources
+    JSMin.new(sources).minify
+  end
+  
+  def initialize sources = []
+    @in = StringIO.new
+    @copy = []
+    add_file sources
+  end
+  
+  def add_file obj
+    if obj.is_a? Array
+      obj.each{|f|add_file(f)}
+    elsif obj.respond_to? :read
+      add obj.read
+    else
+      add File.read(obj)
+    end
+  end
+  
+  def add obj
+    if obj.respond_to? :read
+      process obj.read
+    else
+      process obj
+    end
+  end
+  
+  def process txt
+    copytext = txt.match(/^\s*\/\* Copy[^$]*?\*\//)
+    @copy.push(copytext.to_s) unless copytext.nil?
+    @in.write txt
+  end
+  
+  def minify
+    @in.rewind
+    @out = StringIO.new
+    @out.write @copy.uniq.join('\n')
+    inner_read
+    @in.rewind
+    @out.rewind
+    output = @out.read
+    @out.close
+    output
+  end
+  
+  private
+  EOF = -1
+  @theA = ""
+  @theB = ""
 
-	def get()
-		c = @in.getc
-		return EOF if(!c)
-		c = c.chr
-		return c if (c >= " " || c == "\n" || c.unpack("c") == EOF)
-		return "\n" if (c == "\r")
-		return " "
-	end
-	
-	def peek()
-        lookaheadChar = @in.getc
-        @in.ungetc(lookaheadChar)
-        return lookaheadChar.chr
-    end
-    
-    def mynext()
-        c = get
-        if (c == "/")
-            if(peek == "/")
-                while(true)
-                    c = get
-                    if (c <= "\n")
-                    return c
-                    end
-                end
-            end
-            if(peek == "*")
-                get
-                while(true)
-                    case get
-                    when "*"
-                       if (peek == "/")
-                            get
-                            return " "
-                        end
-                    when EOF
-                        raise "Unterminated comment"
-                    end
-                end
-            end
+  def get()
+    c = @in.getc
+    return EOF if(!c)
+    c = c.chr
+    return c if (c >= " " || c == "\n" || c.unpack("c") == EOF)
+    return "\n" if (c == "\r")
+    return " "
+  end
+  
+  def peek()
+    lookaheadChar = @in.getc
+    @in.ungetc(lookaheadChar)
+    return lookaheadChar.chr
+  end
+  
+  def mynext()
+    c = get
+    if (c == "/")
+      if(peek == "/")
+        while(true)
+          c = get
+          if (c <= "\n")
+          return c
+          end
         end
-        return c
+      end
+      if(peek == "*")
+        get
+        while(true)
+          case get
+          when "*"
+             if (peek == "/")
+              get
+              return " "
+            end
+          when EOF
+            raise "Unterminated comment"
+          end
+        end
+      end
     end
-    
-    def isAlphanum(c)
-       return false if !c || c == EOF
-       return ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
-               (c >= 'A' && c <= 'Z') || c == '_' || c == '$' ||
-               c == '\\' || c[0] > 126)
+    return c
+  end
+  
+  def isAlphanum(c)
+     return false if !c || c == EOF
+     return ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+         (c >= 'A' && c <= 'Z') || c == '_' || c == '$' ||
+         c == '\\' || c[0] > 126)
+  end
+  
+  def action(a)
+    if(a==1)
+      @out.write @theA
     end
-    
-    def action(a)
-        if(a==1)
+    if(a==1 || a==2)
+      @theA = @theB
+      if (@theA == "\'" || @theA == "\"")
+        while (true)
+          @out.write @theA
+          @theA = get
+          break if (@theA == @theB)
+          raise "Unterminated string literal" if (@theA <= "\n")
+          if (@theA == "\\")
             @out.write @theA
+            @theA = get
+          end
         end
-        if(a==1 || a==2)
-            @theA = @theB
-            if (@theA == "\'" || @theA == "\"")
-                while (true)
-                    @out.write @theA
-                    @theA = get
-                    break if (@theA == @theB)
-                    raise "Unterminated string literal" if (@theA <= "\n")
-                    if (@theA == "\\")
-                        @out.write @theA
-                        @theA = get
-                    end
-                end
-            end
-        end
-        if(a==1 || a==2 || a==3)
-            @theB = mynext
-            if (@theB == "/" && (@theA == "(" || @theA == "," || @theA == "=" ||
-                                 @theA == ":" || @theA == "[" || @theA == "!" ||
-                                 @theA == "&" || @theA == "|" || @theA == "?" ||
-                                 @theA == "{" || @theA == "}" || @theA == ";" ||
-                                 @theA == "\n"))
-                @out.write @theA
-                @out.write @theB
-                while (true)
-                    @theA = get
-                    if (@theA == "/")
-                        break
-                    elsif (@theA == "\\")
-                        @out.write @theA
-                        @theA = get
-                    elsif (@theA <= "\n")
-                        raise "Unterminated RegExp Literal"
-                    end
-                    @out.write @theA
-                end
-                @theB = mynext
-            end
-        end
+      end
     end
-    
-    def inner_read
-        @theA = "\n"
-        action(3)
-        while (@theA != EOF)
-            case @theA
-            when " "
-                if (isAlphanum(@theB))
-                    action(1)
-                else
-                    action(2)
-                end
-            when "\n"
-                case (@theB)
-                when "{","[","(","+","-"
-                    action(1)
-                when " "
-                    action(3)
-                else
-                    if (isAlphanum(@theB))
-                        action(1)
-                    else
-                        action(2)
-                    end
-                end
+    if(a==1 || a==2 || a==3)
+      @theB = mynext
+      if (@theB == "/" && (@theA == "(" || @theA == "," || @theA == "=" ||
+                 @theA == ":" || @theA == "[" || @theA == "!" ||
+                 @theA == "&" || @theA == "|" || @theA == "?" ||
+                 @theA == "{" || @theA == "}" || @theA == ";" ||
+                 @theA == "\n"))
+        @out.write @theA
+        @out.write @theB
+        while (true)
+          @theA = get
+          if (@theA == "/")
+            break
+          elsif (@theA == "\\")
+            @out.write @theA
+            @theA = get
+          elsif (@theA <= "\n")
+            raise "Unterminated RegExp Literal"
+          end
+          @out.write @theA
+        end
+        @theB = mynext
+      end
+    end
+  end
+  
+  def inner_read
+    @theA = "\n"
+    action(3)
+    while (@theA != EOF)
+      case @theA
+      when " "
+        if (isAlphanum(@theB))
+          action(1)
+        else
+          action(2)
+        end
+      when "\n"
+        case (@theB)
+        when "{","[","(","+","-"
+          action(1)
+        when " "
+          action(3)
+        else
+          if (isAlphanum(@theB))
+            action(1)
+          else
+            action(2)
+          end
+        end
+      else
+        case (@theB)
+        when " "
+          if (isAlphanum(@theA))
+            action(1)
+          else
+            action(3)
+          end
+        when "\n"
+          case (@theA)
+          when "}","]",")","+","-","\"","\\", "'", '"'
+            action(1)
+          else
+            if (isAlphanum(@theA))
+              action(1)
             else
-                case (@theB)
-                when " "
-                    if (isAlphanum(@theA))
-                        action(1)
-                    else
-                        action(3)
-                    end
-                when "\n"
-                    case (@theA)
-                    when "}","]",")","+","-","\"","\\", "'", '"'
-                        action(1)
-                    else
-                        if (isAlphanum(@theA))
-                            action(1)
-                        else
-                            action(3)
-                        end
-                    end
-                else
-                    action(1)
-                end
+              action(3)
             end
+          end
+        else
+          action(1)
         end
+      end
     end
+  end
 end

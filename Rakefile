@@ -2,14 +2,15 @@ require 'fileutils'
 sources = ["src/enumerator.js", "src/quicksort.js", "src/jinqs.js"]
 version = File.read("VERSION").strip
 
-task :default => ["bin/jinqs.#{version}.min.js"]
+task :default => ["bin/jinqs-#{version}.min.js"]
 
 directory "bin"
 
-file "bin/jinqs.#{version}.min.js" => ["bin"] + sources do |t|
+file "bin/jinqs-#{version}.min.js" => ["bin"] + sources do |t|
   puts "making #{t}"	
   require 'util/jsmin'
   File.open t.to_s, "w" do |f|
+    f.write "/*#{File.read("LICENSE")}*/\n"
     f.write JSMin.minify(sources)
   end
 end
