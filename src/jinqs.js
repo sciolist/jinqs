@@ -573,9 +573,8 @@ Ken.Jinqs.addMethods({
     var grouper = function(item) { return outerKeySelector(item[0]); };
     var joined = source.join(inner, outerKeySelector, innerKeySelector, null, true);
     
-    return joined.groupBy(grouper, function(data) {
-      var item = data[1];
-      var query = new Ken.Jinqs(item);
+    return joined.groupBy(grouper, function(key, value) {
+      var query = new Ken.Jinqs(value);
       
       var outerValue = query.first(null, [])[0];
       var innerValues = query.select(function(i){ return i[1]; }).where(function(i){ return i !== null; });
@@ -600,7 +599,7 @@ Ken.Jinqs.addMethods({
       moveNext: function(done) {
         while(this.inner.moveNext()) {
           var item = this.inner.current();
-          return resultSelector ? resultSelector(item) : item;
+          return resultSelector ? resultSelector(item[0], item[1], item) : item;
         }
         return done;
       }
