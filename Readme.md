@@ -43,12 +43,11 @@ This continues iterating the method until an 'undefined' value is returned (`ret
     
     var j = $jinqs(fn).select(Math.sqrt).takeWhile(function(v) { return v < 32; }).sum(); //> 21829.1..
 
-An objects properties can also be used as a data source, which wraps them into arrays
-to the effect that `{ id: 12 }` becomes `[['id',12]]`
+An objects properties can also be used as a data source.
 
     var value = { id0: [58,39929], id1: [12231,23] };
     
-    var j = $jinqs(value).select(function(i) { return $jinqs(i[1]).sum(); }).average(); //> 26120.5
+    var j = $jinqs(value).select(function(key, value) { return $jinqs(value).sum(); }).average(); //> 26120.5
 
 A final method for creating a data source is create a `Ken.Enumerator` directly, which
 allows as much control as is possible on the enumeration procedure.
