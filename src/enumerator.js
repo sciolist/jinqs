@@ -1,4 +1,5 @@
 if(typeof Ken == "undefined") Ken = { };
+if(typeof exports != "undefined") exports.Ken = Ken;
 
 /// Class: Ken.Enumerator
 ///  Supports iteration over a data source.

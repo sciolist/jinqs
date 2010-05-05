@@ -1,6 +1,8 @@
 require 'fileutils'
+require 'rake/clean'
 sources = ["src/enumerator.js", "src/quicksort.js", "src/jinqs.js"]
 version = File.read("VERSION").strip
+CLEAN.include('bin')
 
 task :default => ["bin/jinqs-#{version}.min.js"]
 
@@ -13,13 +15,6 @@ file "bin/jinqs-#{version}.min.js" => ["bin"] + sources do |t|
     f.write "/*#{File.read("LICENSE")}*/\n"
     f.write JSMin.minify(sources)
   end
-end
-
-task :clean do |t|
-end
-
-task :clobber do |t|
-  FileUtils.remove_dir "bin"
 end
 
 task :test => sources do |t|

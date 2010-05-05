@@ -1,5 +1,11 @@
 if(typeof Ken == "undefined") { Ken = { }; }
-$jinqs = function(data) { return new Ken.Jinqs(data); } 
+if(typeof window != "undefined") window.$jinqs = function(data) { return new Ken.Jinqs(data); } 
+if(typeof exports != "undefined") {
+    if(!Ken.Enumerator) { try { Ken.Enumerator = require('./enumerator').Ken.Enumerator; } catch(e) { } } // this could be included after in a compressed file.
+	if(!Ken.quickSort) { try { Ken.quickSort = require('./quickSort').Ken.quickSort; } catch(e) { } } // this could be included after in a compressed file.
+	exports.Ken = Ken;
+	exports.over = function(data) { return new Ken.Jinqs(data); } 
+}
 
 /// Class: Ken.Jinqs
 ///  Supplies data querying capabilities using query expressions.

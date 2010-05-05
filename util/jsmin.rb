@@ -35,6 +35,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+require 'stringio'
 
 class JSMin
   def self.minify sources
@@ -136,7 +137,7 @@ class JSMin
      return false if !c || c == EOF
      return ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
          (c >= 'A' && c <= 'Z') || c == '_' || c == '$' ||
-         c == '\\' || c[0] > 126)
+         c == '\\' || c[0].to_i > 126)
   end
   
   def action(a)

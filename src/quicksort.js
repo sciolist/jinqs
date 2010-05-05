@@ -25,6 +25,7 @@ Retrieved from: http://en.literateprograms.org/Quicksort_(JavaScript)?oldid=8410
 */
 
 if(typeof Ken == "undefined") { Ken = { }; }
+if(typeof exports != "undefined") exports.Ken = Ken;
 
 Ken.quickSort = function(array, keySelector, comparer, begin, end) {
   if(array.toArray) array = array.toArray();
