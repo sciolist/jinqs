@@ -6,7 +6,7 @@ providing helpers for traversing, sorting, mapping and aggregating information i
 
 A typical Jinqs query looks something like
 
-    closest = $jinqs(markers).orderBy(function(m) { return target.distanceFrom(m.getLatLng()); })
+    closest = jinqs.over(markers).orderBy(function(m) { return target.distanceFrom(m.getLatLng()); })
                              .take(10).toArray();
 
 which iterates a set of [Google Maps](http://code.google.com/apis/maps/) markers 
@@ -19,7 +19,7 @@ Enumeration
 The majority of Jinqs methods create shells around enumerable iterators which defer execution of queries for as long as possible.
 If you write a deferring Jinq query such as:
 
-    var j = $jinqs([0,1,2,3,4]).where(function(v, i)  { return v > 2; })
+    var j = jinqs.over([0,1,2,3,4]).where(function(v, i)  { return v > 2; })
                                .select(function(v) { return v * v; })
                                .min(); //> 9
 
@@ -33,7 +33,7 @@ Data sources
 
 There is support for several different types of data sources, the most obvious being an array of values.
 
-    var j = $jinqs([0,null,2,"3",4]).where(function(v, i) { return v > 2; }).toArray(); //> ["3", 4]
+    var j = jinqs.over([0,null,2,"3",4]).where(function(v, i) { return v > 2; }).toArray(); //> ["3", 4]
 
 It is also possible to create an iterator which takes its values from the result of method invocations.
 This continues iterating the method until an 'undefined' value is returned (`return;`)
@@ -41,20 +41,20 @@ This continues iterating the method until an 'undefined' value is returned (`ret
     var i  = 0;
     var fn = function() { return ++i; }
     
-    var j = $jinqs(fn).select(Math.sqrt).takeWhile(function(v) { return v < 32; }).sum(); //> 21829.1..
+    var j = jinqs.over(fn).select(Math.sqrt).takeWhile(function(v) { return v < 32; }).sum(); //> 21829.1..
 
 An objects properties can also be used as a data source.
 
     var value = { id0: [58,39929], id1: [12231,23] };
     
-    var j = $jinqs(value).select(function(key, value) { return $jinqs(value).sum(); }).average(); //> 26120.5
+    var j = jinqs.over(value).select(function(key, value) { return jinqs.over(value).sum(); }).average(); //> 26120.5
 
-A final method for creating a data source is create a `Ken.Enumerator` directly, which
+A final method for creating a data source is create a `jinqs.Enumerator` directly, which
 allows as much control as is possible on the enumeration procedure.
 
     var i = 0;
     var arr = [0,1,2,3,4,5];
-    var enumr = new Ken.Enumerator({
+    var enumr = new jinqs.Enumerator({
         first: function() { i = 0; },   // invoked once after the enumerator is reset, as well as when its first iterated. (optional)
         reset: function() { i = 0; },   // called to reset the enumerator to its initial state.
         current: function() { return arr[i%2?i:arr.length-i]; }, // returns the element at the current state of the enumerator.
@@ -64,7 +64,7 @@ allows as much control as is possible on the enumeration procedure.
         }
     });
     
-    $jinqs(enumr).toArray(); // [1, 4, 3, 2, 5, 0]
+    jinqs.over(enumr).toArray(); // [1, 4, 3, 2, 5, 0]
 
 A slight variation on the same method is to omit the `current` method, in which case a marking
 token is passed to the moveNext method which can be used to halt enumeration, and it would
@@ -72,7 +72,7 @@ otherwise return the new current value.
 
     var i = 0;
     var arr = [0,1,2,3,4,5];
-    var enumr = new Ken.Enumerator({
+    var enumr = new jinqs.Enumerator({
         first: function() { i = 0; },   // invoked once after the enumerator is reset, as well as when its first iterated. (optional)
         reset: function() { i = 0; },   // called to reset the enumerator to its initial state.
         moveNext: function(done) {   // iterates the source, returning elements from it.
@@ -82,7 +82,7 @@ otherwise return the new current value.
         }
     });
     
-    $jinqs(enumr).toArray(); // [5, 4, 3, 2, 1, 0]
+    jinqs.over(enumr).toArray(); // [5, 4, 3, 2, 1, 0]
 
 
 Method groups
@@ -92,7 +92,7 @@ Method groups
 The `aggregate([seed], accumulator, [resultSelector])` iterates over its source and applies an accumulator method
 on every element.
 
-    $jinqs([21,10,39]).aggregate(-Math.Infinity, Math.Max);
+    jinqs.over([21,10,39]).aggregate(-Math.Infinity, Math.Max);
 
 This is used by `average`, `count`, `min`, `sum`, `max` to provide common aggregations.
 
@@ -120,12 +120,12 @@ Other filters:
 
 The `select` method can be used to modify the data in the source with a transform method.
 
-    $jinqs([1, 2, 3]).select(function(i) { return i * 2; }).toArray(); //> [2, 4, 6]
+    jinqs.over([1, 2, 3]).select(function(i) { return i * 2; }).toArray(); //> [2, 4, 6]
 
 There is also a `selectMany` method, in which an array of values from the transform method is flattened into the output.
 
-    $jinqs([1, 2, 3]).selectMany(function(i) { return [i, i*2]; }).toArray(); //> [1, 2, 2, 4, 3, 6]
-    $jinqs([1, 2, 3]).select(function(i) { return [i, i*2]; }).toArray(); //> [[1, 2], [2, 4], [3, 6]]
+    jinqs.over([1, 2, 3]).selectMany(function(i) { return [i, i*2]; }).toArray(); //> [1, 2, 2, 4, 3, 6]
+    jinqs.over([1, 2, 3]).select(function(i) { return [i, i*2]; }).toArray(); //> [[1, 2], [2, 4], [3, 6]]
 
 
 ### Getting values out of the enumerator
@@ -148,7 +148,7 @@ The `join` method takes elements from the source and maps them against another u
     var outer = [{ id: 1, name: "jdp" }]
     var inner = [{ id: 1, uid: 1, tag: "joiner" }, { id: 2, uid: 1, tag: "another tag" }]
     
-    $jinqs(outer).join(inner,
+    jinqs.over(outer).join(inner,
                   function(o) { return  o.id; },
                   function(i) { return i.uid; },
                   function(o, i) { return [o, i]; }).toArray();
@@ -163,7 +163,7 @@ A grouped join maps the outer values only once, and creates an array of inner re
     var outer = [{ id: 1, name: "jdp" }]
     var inner = [{ id: 1, uid: 1, tag: "joiner" }, { id: 2, uid: 1, tag: "another tag" }]
 
-    $jinqs(outer).groupJoin(inner,
+    jinqs.over(outer).groupJoin(inner,
                   function(o) { return  o.id; },
                   function(i) { return i.uid; },
                   function(o, i) { return {user: o, tags: i}; }).toArray();
@@ -177,7 +177,7 @@ The group by method iterates over itself, making arrays of each value that match
 
     var outer = [{ id: 1, name: "jdp", office: 1 }, { id: 2, name: "ej", office: 0 }, { id: 3, name: "be", office: 1 }]
     
-    $jinqs(outer).groupBy(function(o) { return o.office; }, function(k, o) { return { office: k, users: o }; });
+    jinqs.over(outer).groupBy(function(o) { return o.office; }, function(k, o) { return { office: k, users: o }; });
     
     // this will create an array of grouped values, which will contain
     [ { office: 0, users: [ { id: 1, name: "jdp", office: 1 }, { id: 3, name: "be", office: 1 } },
@@ -186,17 +186,17 @@ The group by method iterates over itself, making arrays of each value that match
 #### concat(sequence)
 Concat appends another data source, which will be iterated after the current one.
 
-    $jinqs([0,1]).concat([2,3]); //> [0,1,2,3]
+    jinqs.over([0,1]).concat([2,3]); //> [0,1,2,3]
 
 #### intersect(inner, keySelector)
 Intersect finds all elements that match the same key selector between two sources.
 
-    $jinqs([0,1,2]).intersect([1,2,3]); //> [1,2]
+    jinqs.over([0,1,2]).intersect([1,2,3]); //> [1,2]
 
 #### union(inner, keySelector)
 Union finds and returns all values that are distinct among two sources.
 
-    $jinqs([0,1,2]).union([1,2,3]); //> [0,1,2,3]
+    jinqs.over([0,1,2]).union([1,2,3]); //> [0,1,2,3]
 
 
 ### Sorting
@@ -205,7 +205,7 @@ There are sorting order methods for iterating ascending and descending through a
 
     var a = [ { val: 1, name: "abba" }, { val: 2, name: "zorro" }, { val: 1, name: "queen" } ];
     
-    $jinqs(a).orderByDesc(function(i) { return i.val; })
+    jinqs.over(a).orderByDesc(function(i) { return i.val; })
              .thenBy(function(i) { return i.name; })
              .thenByDesc(function(i) { return i.id; })
     
