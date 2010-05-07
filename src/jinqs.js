@@ -1,31 +1,32 @@
-if(typeof Ken == "undefined") { Ken = { }; }
-if(typeof window != "undefined") window.$jinqs = function(data) { return new Ken.Jinqs(data); } 
+if(typeof jinqs == "undefined") { jinqs = { }; }
+jinqs.over = function(data) { return new jinqs.Core(data); }
+
 if(typeof exports != "undefined") {
-    if(!Ken.Enumerator) { try { Ken.Enumerator = require('./enumerator').Ken.Enumerator; } catch(e) { } } // this could be included after in a compressed file.
-	if(!Ken.quickSort) { try { Ken.quickSort = require('./quickSort').Ken.quickSort; } catch(e) { } } // this could be included after in a compressed file.
-	exports.Ken = Ken;
-	exports.over = function(data) { return new Ken.Jinqs(data); } 
+  if(!jinqs.Enumerator) { try { jinqs.Enumerator = require('./enumerator').jinqs.Enumerator; } catch(e) { } } // this could be included after in a compressed file.
+	if(!jinqs.quickSort) { try { jinqs.quickSort = require('./quickSort').jinqs.quickSort; } catch(e) { } } // this could be included after in a compressed file.
+	exports.jinqs = jinqs;
+	exports.over = jinqs.over;
 }
 
-/// Class: Ken.Jinqs
+/// Class: jinqs.Core
 ///  Supplies data querying capabilities using query expressions.
 
-/// Method: new Ken.Jinqs
-///  Creates a new <Ken.Jinqs> instance.
+/// Method: new jinqs.Core
+///  Creates a new <jinqs.Core> instance.
 /// Parameters:
 ///  data - The data source to be enumerated, attempts to automatically create an enumerable source from the value.
-Ken.Jinqs = function(data) {
+jinqs.Core = function(data) {
   if(!arguments.length) { data = []; }
   this.data = data;
 };
 
 /// Static Method: addMethod
-///  Registers a Jinqs function.
+///  Registers a jinqs function.
 /// Parameters:
 ///  name   - Name of the method to register.
 ///  method - Function to invoke when a linqs query is performed.
-Ken.Jinqs.addMethod = function(name, method) {
-  Ken.Jinqs.prototype[name] = function() {
+jinqs.Core.addMethod = function(name, method) {
+  jinqs.Core.prototype[name] = function() {
     var args = [this];
     for(var i=0; i<arguments.length; ++i) args.push(arguments[i]);
     return method.apply(this, args);
@@ -33,23 +34,23 @@ Ken.Jinqs.addMethod = function(name, method) {
 };
 
 /// Static Method: addMethods
-///  Registers a set of Jinqs functions.
+///  Registers a set of jinqs functions.
 /// Parameters:
-///  source - An object containing the Jinqs functions to add.
-Ken.Jinqs.addMethods = function(source) {
+///  source - An object containing the jinqs functions to add.
+jinqs.Core.addMethods = function(source) {
   for(var item in source) {
     if(source.hasOwnProperty(item)) {
-      Ken.Jinqs.addMethod(item, source[item]);
+      jinqs.Core.addMethod(item, source[item]);
     }
   }
 };
 
-Ken.Jinqs.addMethods({
+jinqs.Core.addMethods({
   /// Method: getEnumerator
-  ///  Gets the underlying <Ken.Enumerator> to iterate the expression results.
+  ///  Gets the underlying <jinqs.Enumerator> to iterate the expression results.
   /// Returns:
-  ///  A <Ken.Enumerator> iterating over the sequence.
-  getEnumerator: function(source) { return Ken.Enumerator.over(source.data); },
+  ///  A <jinqs.Enumerator> iterating over the sequence.
+  getEnumerator: function(source) { return jinqs.Enumerator.over(source.data); },
   
   /// Method: each
   ///  Executes a method over every item in the sequence.
@@ -123,19 +124,19 @@ Ken.Jinqs.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance that will sort the data on initialization.
+  ///  A <jinqs.Core> instance that will sort the data on initialization.
   orderBy: function(source, keySelector, comparer) {
-    if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
+    if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     
-    var query = new Ken.Jinqs({
+    var query = new jinqs.Core({
       reset: function() {
         if(this.inner) { this.inner.reset(); }
       },
       moveNext: function(done) {
         if(!this.inner) {
           var prepared = source.select(function(item) { return [keySelector?keySelector(item):item, item]; });
-          var sorted = Ken.quickSort(prepared, function(i){return i[0];}, comparer);
-          this.inner = new Ken.Jinqs(sorted).select(function(i) { return i[1]; }).getEnumerator();
+          var sorted = jinqs.quickSort(prepared, function(i){return i[0];}, comparer);
+          this.inner = new jinqs.Core(sorted).select(function(i) { return i[1]; }).getEnumerator();
         }
         while(this.inner.moveNext()) {
           return this.inner.current();
@@ -154,9 +155,9 @@ Ken.Jinqs.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance that will sort the data in descending order on initialization.
+  ///  A <jinqs.Core> instance that will sort the data in descending order on initialization.
   orderByDesc: function(source, keySelector, comparer) {
-    if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
+    if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     return source.orderBy(keySelector, function(a, b){ return -comparer(a, b); });
   },
   
@@ -166,10 +167,10 @@ Ken.Jinqs.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance that will sort the data on initialization.
+  ///  A <jinqs.Core> instance that will sort the data on initialization.
   thenBy: function(source, keySelector, comparer) {
     if(!source.orderByComparer) { return source.orderBy(keySelector, comparer); }
-    if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
+    if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     
     var oldMethod = source.orderByMethod;
     var oldComparer = source.orderByComparer;
@@ -191,9 +192,9 @@ Ken.Jinqs.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance that will sort the data in descending order on initialization.
+  ///  A <jinqs.Core> instance that will sort the data in descending order on initialization.
   thenByDesc: function(source, keySelector, comparer) {
-    if(!comparer) { comparer = Ken.quickSort.defaultComparer; }
+    if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     return source.thenBy(keySelector, function(a, b){ return -comparer(a, b); });
   },
   
@@ -233,9 +234,9 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  uniqueKeySelector - A method to extract the key to judge distinctness by. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance over all distinct elements that were found.
+  ///  A <jinqs.Core> instance over all distinct elements that were found.
   distinct: function(source, uniqueKeySelector) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         this.inner = source.getEnumerator();
         this.keys = { }
@@ -270,11 +271,11 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  transform - A transform function to apply to each element of the sequence.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the mapped results of the sequence.
+  ///  A <jinqs.Core> instance over the mapped results of the sequence.
   select: function(source, transform) {
-    if(!transform) { return new Ken.Jinqs(source); }
+    if(!transform) { return new jinqs.Core(source); }
     
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() { this.inner = source.getEnumerator(); },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -291,9 +292,9 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  selector - A transform function to apply to each element of the sequence. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the flattened and mapped results of the sequence.
+  ///  A <jinqs.Core> instance over the flattened and mapped results of the sequence.
   selectMany: function(source, transform) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() { this.i = 0; this.inner = source.select(transform).getEnumerator(); },
       moveNext: function(done) {
         var item = this.inner.current();
@@ -312,14 +313,14 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  sequence - The sequence to be concatenate into the result, this can be any enumerable source.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the concatenated elements of the sequence.
+  ///  A <jinqs.Core> instance over the concatenated elements of the sequence.
   concat: function(source, sequence) {
-    if(!sequence) { return new Ken.Jinqs(source); }
+    if(!sequence) { return new jinqs.Core(source); }
     
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         this.inner = source.getEnumerator();
-        this.outer = Ken.Enumerator.over(sequence);
+        this.outer = jinqs.Enumerator.over(sequence);
       },
       moveNext: function(done) {
         while(this.inner.moveNext()) { return this.inner.current(); }
@@ -334,11 +335,11 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  predicate - A function to test whether an element should be included.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the filtered elements.
+  ///  A <jinqs.Core> instance over the filtered elements.
   where: function(source, predicate) {
-    if(!predicate) { return new Ken.Jinqs(source); }
+    if(!predicate) { return new jinqs.Core(source); }
     
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() { this.inner = source.getEnumerator(); },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -386,9 +387,9 @@ Ken.Jinqs.addMethods({
   /// Method: reverse
   ///  Inverts the order of the elements in the sequence.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the elements in the current sequence in reverse order.
+  ///  A <jinqs.Core> instance over the elements in the current sequence in reverse order.
   reverse: function(source) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         if(this.inner) { this.inner.reset(); return; };
         var arr = [];
@@ -396,7 +397,7 @@ Ken.Jinqs.addMethods({
         while(enumr.moveNext()) {
           arr.unshift(enumr.current());
         }
-        this.inner = new Ken.Enumerator(arr);
+        this.inner = new jinqs.Enumerator(arr);
       },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -412,10 +413,10 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  predicate - A function to test each element against.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the elements before the predicate stopped matching.
+  ///  A <jinqs.Core> instance over the elements before the predicate stopped matching.
   takeWhile: function(source, predicate) {
-    if(!predicate) { return new Ken.Jinqs(this.data); }
-    return new Ken.Jinqs({
+    if(!predicate) { return new jinqs.Core(this.data); }
+    return new jinqs.Core({
       first: function() { this.i = 0; this.inner = source.getEnumerator(); },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -433,10 +434,10 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  predicate - A function to test each element against.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the elements after the predicate stopped matching.
+  ///  A <jinqs.Core> instance over the elements after the predicate stopped matching.
   skipWhile: function(source, predicate) {
-    if(!predicate) { return new Ken.Jinqs(this.data); }
-    return new Ken.Jinqs({
+    if(!predicate) { return new jinqs.Core(this.data); }
+    return new jinqs.Core({
       first: function() {
         this.i = 0;
         this.skipping = true;
@@ -461,9 +462,9 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  count - The maximum number of elements to return.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the supplied amount of elements from the sequence.
+  ///  A <jinqs.Core> instance over the supplied amount of elements from the sequence.
   take: function(source, count) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         this.i = 0;
         this.inner = source.getEnumerator();
@@ -481,9 +482,9 @@ Ken.Jinqs.addMethods({
   /// Parameters:
   ///  count - The maximum number of elements to skip.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the elements after those that were skipped.
+  ///  A <jinqs.Core> instance over the elements after those that were skipped.
   skip: function(source, count) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         this.i = 0;
         this.inner = source.getEnumerator();
@@ -574,13 +575,13 @@ Ken.Jinqs.addMethods({
   ///  innerKeySelector - A function to extract the key from the inner sequence. (optional)
   ///  resultSelector   - A function that creates a result from the outer element and an array of inner results. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance over the joined results of the sequences.
+  ///  A <jinqs.Core> instance over the joined results of the sequences.
   groupJoin: function(source, inner, outerKeySelector, innerKeySelector, resultSelector) {
     var grouper = function(item) { return outerKeySelector(item[0]); };
     var joined = source.join(inner, outerKeySelector, innerKeySelector, null, true);
     
     return joined.groupBy(grouper, function(key, value) {
-      var query = new Ken.Jinqs(value);
+      var query = new jinqs.Core(value);
       
       var outerValue = query.first(null, [])[0];
       var innerValues = query.select(function(i){ return i[1]; }).where(function(i){ return i !== null; });
@@ -594,13 +595,13 @@ Ken.Jinqs.addMethods({
   ///  keySelector - A function to extract the key from an element.
   ///  resultSelector - A function that creates a result for each group. (optional)
   /// Returns:
-  ///  A <Ken.Jinqs> instance where each value is a group of elements with matching keys.
+  ///  A <jinqs.Core> instance where each value is a group of elements with matching keys.
   groupBy: function(source, keySelector, resultSelector) {
-    return new Ken.Jinqs({
+    return new jinqs.Core({
       first: function() {
         if(this.inner) { this.inner.reset(); return; }
         var lookup = source.toLookup(keySelector);
-        this.inner = Ken.Enumerator.object(lookup);
+        this.inner = jinqs.Enumerator.object(lookup);
       },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -618,7 +619,7 @@ Ken.Jinqs.addMethods({
   ///  inner       - The sequence to be joined, this can be any enumerable source.
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over each distinct value from the sequences.
+  ///  A <jinqs.Core> instance over each distinct value from the sequences.
   union: function(source, inner, keySelector) {
     return source.concat(inner, keySelector).distinct(keySelector);
   },
@@ -629,7 +630,7 @@ Ken.Jinqs.addMethods({
   ///  inner       - The sequence to be joined, this can be any enumerable source.
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
-  ///  A <Ken.Jinqs> instance over each distinct value that exists in both sequences.
+  ///  A <jinqs.Core> instance over each distinct value that exists in both sequences.
   intersect: function(source, inner, keySelector) {
     return source.join(inner, keySelector, keySelector, function(a, b) { return a; }).distinct(keySelector);
   },
@@ -645,7 +646,7 @@ Ken.Jinqs.addMethods({
   join: function(source, inner, outerKeySelector, innerKeySelector, resultSelector, outerJoin) {
     var innerKeys = null;
     return this.select(function(item) {
-      if (innerKeys === null) { innerKeys = new Ken.Jinqs(inner).toLookup(innerKeySelector); }
+      if (innerKeys === null) { innerKeys = new jinqs.Core(inner).toLookup(innerKeySelector); }
       var key = (outerKeySelector ? outerKeySelector(item) : item);
       var result = [];
       var innerValues = innerKeys[key];

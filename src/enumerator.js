@@ -1,20 +1,20 @@
-if(typeof Ken == "undefined") Ken = { };
-if(typeof exports != "undefined") exports.Ken = Ken;
+if(typeof jinqs == "undefined") jinqs = { };
+if(typeof exports != "undefined") exports.jinqs = jinqs;
 
-/// Class: Ken.Enumerator
+/// Class: jinqs.Enumerator
 ///  Supports iteration over a data source.
 
-/// Method: new Ken.Enumerator
-///  Creates a new <Ken.Enumerator> instance.
+/// Method: new jinqs.Enumerator
+///  Creates a new <jinqs.Enumerator> instance.
 /// Parameters:
 ///  args - A configuration for the enumerator. (see <Arguments> section)
 /// Arguments:
 ///  first - A method that is invoked the first time the instance is iterated over after a reset. (optional)
 ///  reset - A method that resets the state of the enumerator. (optional)
-///  current - A method that returns the current value of the data source. (optional, see <Ken.Enumerator.basic> for details)
-///  moveNext - A method that iterates over the source, returning true while more data is available. (see <Ken.Enumerator.basic> if no current value is supplied)
-Ken.Enumerator = function(args) {
-  if(!args.current) { args = Ken.Enumerator.basicConfig(args); }
+///  current - A method that returns the current value of the data source. (optional, see <jinqs.Enumerator.basic> for details)
+///  moveNext - A method that iterates over the source, returning true while more data is available. (see <jinqs.Enumerator.basic> if no current value is supplied)
+jinqs.Enumerator = function(args) {
+  if(!args.current) { args = jinqs.Enumerator.basicConfig(args); }
   args.first = args.first || args.reset;
   this.scope = this;
   this.args = args;
@@ -22,7 +22,7 @@ Ken.Enumerator = function(args) {
   this._eof = false;
 };
 
-Ken.Enumerator.prototype = {
+jinqs.Enumerator.prototype = {
   /// Method: current
   ///  Gets the current element in the data source.
   /// Returns:
@@ -62,14 +62,14 @@ Ken.Enumerator.prototype = {
 /// Parameters:
 ///  obj - The source to attempt to enumerate.
 /// Returns:
-///  A <Ken.Enumerator> instance over the supplied object.
-Ken.Enumerator.over = function(obj) {
-  if(obj instanceof Ken.Enumerator) { return obj; }
+///  A <jinqs.Enumerator> instance over the supplied object.
+jinqs.Enumerator.over = function(obj) {
+  if(obj instanceof jinqs.Enumerator) { return obj; }
   else if(obj.getEnumerator) { return obj.getEnumerator(); }
-  else if(obj instanceof Function) { return Ken.Enumerator.func(obj); }
-  else if(obj.length != null) { return Ken.Enumerator.array(obj); }
-  else if(obj.moveNext instanceof Function) { return new Ken.Enumerator(obj); }
-  else { return Ken.Enumerator.object(obj); }
+  else if(obj instanceof Function) { return jinqs.Enumerator.func(obj); }
+  else if(obj.length != null) { return jinqs.Enumerator.array(obj); }
+  else if(obj.moveNext instanceof Function) { return new jinqs.Enumerator(obj); }
+  else { return jinqs.Enumerator.object(obj); }
 };
 
 /// Static Method: range
@@ -79,9 +79,9 @@ Ken.Enumerator.over = function(obj) {
 ///  to   - The final value of the enumeration.
 ///  step - The amount to increase or decrease with each step.
 /// Returns:
-///  A <Ken.Enumerator> instance over the requested range.
-Ken.Enumerator.range = function(from, to, step) {
-  return new Ken.Enumerator({
+///  A <jinqs.Enumerator> instance over the requested range.
+jinqs.Enumerator.range = function(from, to, step) {
+  return new jinqs.Enumerator({
     reset:    function() { this.i = from-1; },
     current:  function() { return this.i;   },
     moveNext: function() { this.i += step||1; return step<0 ? this.i>to : this.i<to; }
@@ -94,10 +94,10 @@ Ken.Enumerator.range = function(from, to, step) {
 ///  value - The value to be returned.
 ///  count - The amount of times to return the item.
 /// Returns:
-///  A <Ken.Enumerator> instance which returns the requested value.
-Ken.Enumerator.repeat = function(value, count) {
+///  A <jinqs.Enumerator> instance which returns the requested value.
+jinqs.Enumerator.repeat = function(value, count) {
   if(arguments.length == 1) { count = value; value = 0; }
-  return new Ken.Enumerator({
+  return new jinqs.Enumerator({
     reset:    function() { this.i = 0; },
     current:  function() { return value; },
     moveNext: function() { this.i++; return this.i<=count; }
@@ -109,9 +109,9 @@ Ken.Enumerator.repeat = function(value, count) {
 /// Parameters:
 ///  arr  - The array to iterate over.
 /// Returns:
-///  A <Ken.Enumerator> instance over the array.
-Ken.Enumerator.array  = function(arr)  {
-  return new Ken.Enumerator(Ken.Enumerator.arrayConfig(arr));
+///  A <jinqs.Enumerator> instance over the array.
+jinqs.Enumerator.array  = function(arr)  {
+  return new jinqs.Enumerator(jinqs.Enumerator.arrayConfig(arr));
 };
 
 /// Static Method: basic
@@ -119,12 +119,12 @@ Ken.Enumerator.array  = function(arr)  {
 /// Parameters:
 ///  opts - The configuration for the enumeration.
 /// Returns:
-///  A <Ken.Enumerator> instance with the supplied options.
+///  A <jinqs.Enumerator> instance with the supplied options.
 /// Remarks:
 ///  To create a basic enumerator, you supply a "moveNext" method, that returns a "done"
 ///  parameter when its execution is finished:
 ///  > var i = 0;
-///  > Ken.Enumerator.basic({
+///  > jinqs.Enumerator.basic({
 ///  >   reset: function() { var i = 0; },
 ///  >   moveNext: function(done) {
 ///  >     if(i < 1000) return ++i;
@@ -135,8 +135,8 @@ Ken.Enumerator.array  = function(arr)  {
 ///  an infinite enumeration, such as by supplying:
 ///  >  moveNext: function() { return ++i; }
 ///  would make the method iterate values as long as they are requested.
-Ken.Enumerator.basic  = function(opts) {
-  return new Ken.Enumerator(Ken.Enumerator.basicConfig(opts));
+jinqs.Enumerator.basic  = function(opts) {
+  return new jinqs.Enumerator(jinqs.Enumerator.basicConfig(opts));
 };
 
 /// Static Method: func
@@ -144,9 +144,9 @@ Ken.Enumerator.basic  = function(opts) {
 /// Parameters:
 ///  fn - The method to iterate over.
 /// Returns:
-///  A <Ken.Enumerator> instance which will invoke the supplied method when iterated.
-Ken.Enumerator.func   = function(fn)   {
-  return new Ken.Enumerator(Ken.Enumerator.funcConfig(fn));
+///  A <jinqs.Enumerator> instance which will invoke the supplied method when iterated.
+jinqs.Enumerator.func   = function(fn)   {
+  return new jinqs.Enumerator(jinqs.Enumerator.funcConfig(fn));
 };
 
 /// Static Method: object
@@ -154,12 +154,12 @@ Ken.Enumerator.func   = function(fn)   {
 /// Parameters:
 ///  obj - An object to iterate properties from.
 /// Returns:
-///  A <Ken.Enumerator> instance which will iterate over properties from the object.
-Ken.Enumerator.object = function(obj)  {
-  return new Ken.Enumerator(Ken.Enumerator.objectConfig(obj));
+///  A <jinqs.Enumerator> instance which will iterate over properties from the object.
+jinqs.Enumerator.object = function(obj)  {
+  return new jinqs.Enumerator(jinqs.Enumerator.objectConfig(obj));
 };
 
-Ken.Enumerator.arrayConfig = function(arr) {
+jinqs.Enumerator.arrayConfig = function(arr) {
   return {
     array:    arr,
     reset:    function() { this.i = -1; },
@@ -168,7 +168,7 @@ Ken.Enumerator.arrayConfig = function(arr) {
   };
 };
 
-Ken.Enumerator.basicConfig = function(opts) {
+jinqs.Enumerator.basicConfig = function(opts) {
   var current;
   var done = {};
   
@@ -193,7 +193,7 @@ Ken.Enumerator.basicConfig = function(opts) {
   return opts;
 };
 
-Ken.Enumerator.funcConfig = function(fn) {
+jinqs.Enumerator.funcConfig = function(fn) {
   return {
     reset:    function() { this._scope = {}; this._current = undefined; },
     current:  function() { return this._current; },
@@ -201,7 +201,7 @@ Ken.Enumerator.funcConfig = function(fn) {
   };
 };
 
-Ken.Enumerator.objectConfig = function(obj) {
+jinqs.Enumerator.objectConfig = function(obj) {
   return {
     reset: function() { this.i = -1; },
     first: function() {

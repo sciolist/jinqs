@@ -2,9 +2,9 @@ var sys = require('sys');
 var files = process.argv[2].split(" ");
 
 var red   = function(str){return "\033[31m" + str + "\033[39m"};
-var gray = function(str){return "\033[30m" + str + "\033[39m"};
+var gray  = function(str){return "\033[30m" + str + "\033[39m"};
 var green = function(str){return "\033[32m" + str + "\033[39m"};
-var bold  = function(str){return "\033[1m" + str + "\033[22m"};
+var bold  = function(str){return "\033[1m"  + str + "\033[22m"};
 
 var test = {
   moduleName: null,
