@@ -28,7 +28,7 @@ exports.run = function(test) {
   });
 
   // sum(selector)
-  test.that("sum: should combine all values in j.", function() {
+  test.that("sum: should combine all values.", function() {
     var j = jinqs.over([1,2,3,2,1])
     assert.equal(j.sum(), 9);
   });
