@@ -18,5 +18,5 @@ file "bin/jinqs-#{version}.min.js" => ["bin"] + sources do |t|
 end
 
 task :test => sources do |t|
-  sh "narwhal", "util/runner.js", Dir["tests/**/test.*.js"].join(" ")
+  sh "node", "util/testrunner.js", Dir["tests/**/test.*.js"].join(" ")
 end

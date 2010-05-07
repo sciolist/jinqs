@@ -1,19 +1,19 @@
-depend("src/enumerator.js");
-depend("src/quicksort.js");
-depend("src/jinqs.js");
-module("Transforming");
+var assert = require('assert');
+var jinqs = require('./../src/jinqs');
 
-// select(selector)
-test("select: should remap elements.", function() {
-  var arr      = [49,49,49];
-  var expected = [ 7, 7, 7];
+exports.run = function(test) {
+  // select(selector)
+  test.that("select: should remap elements.", function() {
+    var arr      = [49,49,49];
+    var expected = [ 7, 7, 7];
   
-  var j = $jinqs(arr).select(Math.sqrt);
-  sameEnum(j, expected);
-});
+    var j = jinqs.over(arr).select(Math.sqrt).toArray();
+    assert.deepEqual(j, expected);
+  });
 
-test("select: should work over empty enumerators.", function() {
-  var j = $jinqs([]).select(Math.sqrt);
-  sameEnum(j, []);
-});
-// selectMany(selector)
+  test.that("select: should work over empty enumerators.", function() {
+    var j = jinqs.over([]).select(Math.sqrt).toArray();
+    assert.deepEqual(j, []);
+  });
+  // selectMany(selector)
+}

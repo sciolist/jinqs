@@ -1,16 +1,16 @@
-depend("src/enumerator.js");
-depend("src/quicksort.js");
-depend("src/jinqs.js");
-module("Function enumeration");
+var assert = require('assert');
+var jinqs = require('./../src/jinqs');
 
-test("should iterate method results.", function() {
-  var i = 0;
-  var method = function() { if(i<10) return ++i; }
+exports.run = function(test) {
+  test.that("enumerator should iterate method results.", function() {
+    var i = 0;
+    var method = function() { if(i<10) return ++i; }
   
-  var enumerator = Ken.Enumerator.func(method);
+    var enumerator = Ken.Enumerator.func(method);
   
-  ok(enumerator.moveNext());
-  equal(enumerator.current(), 1);
-  ok(enumerator.moveNext());
-  equal(enumerator.current(), 2);
-});
+    assert.ok(enumerator.moveNext());
+    assert.equal(enumerator.current(), 1);
+    assert.ok(enumerator.moveNext());
+    assert.equal(enumerator.current(), 2);
+  });
+};

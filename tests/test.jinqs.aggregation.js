@@ -1,35 +1,35 @@
-depend("src/enumerator.js");
-depend("src/quicksort.js");
-depend("src/jinqs.js");
-module("Aggregation");
+var assert = require('assert');
+var jinqs = require('./../src/jinqs');
 
-// aggregate(seed, accumulator, resultSelector)
-test("aggregate: should infer seed value.", function() {
-  var j = $jinqs([1,1]).aggregate(function(c,n){return c+n;});
-  equals(j, 2);
-});
+exports.run = function(test) {
+  // aggregate(seed, accumulator, resultSelector)
+  test.that("aggregate: should infer seed value.", function() {
+    var j = jinqs.over([1,1]).aggregate(function(c,n){return c+n;});
+    assert.equal(j, 2);
+  });
 
-test("aggregate: should use supplied seed value.", function() {
-  var j = $jinqs([1,1]).aggregate(-2, function(c,n){return c+n;});
-  equals(j, 0);
-});
+  test.that("aggregate: should use supplied seed value.", function() {
+    var j = jinqs.over([1,1]).aggregate(-2, function(c,n){return c+n;});
+    assert.equal(j, 0);
+  });
 
-// average(selector)
-// count(predicate)
-// min(selector)
-test("min: should fetch lowest available value.", function() {
-  var j = $jinqs([2,3,4,3,2])
-  equals(j.min(), 2);
-});
+  // average(selector)
+  // count(predicate)
+  // min(selector)
+  test.that("min: should fetch lowest available value.", function() {
+    var j = jinqs.over([2,3,4,3,2])
+    assert.equal(j.min(), 2);
+  });
 
-// max(selector)
-test("max: should fetch highest available value.", function() {
-  var j = $jinqs([-3,-2,-1,-2,-3])
-  equals(j.max(), -1);
-});
+  // max(selector)
+  test.that("max: should fetch highest available value.", function() {
+    var j = jinqs.over([-3,-2,-1,-2,-3])
+    assert.equal(j.max(), -1);
+  });
 
-// sum(selector)
-test("sum: should combine all values in j.", function() {
-  var j = $jinqs([1,2,3,2,1])
-  equals(j.sum(), 9);
-});
+  // sum(selector)
+  test.that("sum: should combine all values in j.", function() {
+    var j = jinqs.over([1,2,3,2,1])
+    assert.equal(j.sum(), 9);
+  });
+};
