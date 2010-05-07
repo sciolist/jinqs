@@ -1,11 +1,21 @@
 if(typeof jinqs == "undefined") { jinqs = { }; }
 jinqs.over = function(data) { return new jinqs.Core(data); }
+jinqs.count = function(start, count) {
+  return jinqs.over({
+    reset: function() { this.i = start-1; },
+    moveNext: function(done) {
+      this.i += 1;
+      if(this.i>=start+count) return done;
+      return this.i;
+    } 
+  });
+}
 
 if(typeof exports != "undefined") {
   if(!jinqs.Enumerator) { try { jinqs.Enumerator = require('./enumerator').jinqs.Enumerator; } catch(e) { } } // this could be included after in a compressed file.
-	if(!jinqs.quickSort) { try { jinqs.quickSort = require('./quickSort').jinqs.quickSort; } catch(e) { } } // this could be included after in a compressed file.
-	exports.jinqs = jinqs;
-	exports.over = jinqs.over;
+  if(!jinqs.quickSort) { try { jinqs.quickSort = require('./quickSort').jinqs.quickSort; } catch(e) { } } // this could be included after in a compressed file.
+  exports.jinqs = jinqs;
+  exports.over = jinqs.over;
 }
 
 /// Class: jinqs.Core
@@ -267,7 +277,7 @@ jinqs.Core.addMethods({
   },
   
   /// Method: select
-  ///  Maps each element into a new value using a selection method.
+  ///  Maps each element into a new value using a transform function.
   /// Parameters:
   ///  transform - A transform function to apply to each element of the sequence.
   /// Returns:
@@ -340,11 +350,11 @@ jinqs.Core.addMethods({
     if(!predicate) { return new jinqs.Core(source); }
     
     return new jinqs.Core({
-      first: function() { this.inner = source.getEnumerator(); },
+      first: function() { this.inner = source.getEnumerator(); this.i = 0; },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
           var item = this.inner.current();
-          if(!predicate || predicate(item)) { return item; }
+          if(!predicate || predicate(item, this.i++)) { return item; }
         };
         return done;
       }
@@ -598,8 +608,11 @@ jinqs.Core.addMethods({
   ///  A <jinqs.Core> instance where each value is a group of elements with matching keys.
   groupBy: function(source, keySelector, resultSelector) {
     return new jinqs.Core({
+      reset: function() {
+        if(this.inner) this.inner.reset();
+      },
       first: function() {
-        if(this.inner) { this.inner.reset(); return; }
+        if(this.inner) { return; } // no need to recreate the lookup if it exists.
         var lookup = source.toLookup(keySelector);
         this.inner = jinqs.Enumerator.object(lookup);
       },
@@ -645,7 +658,7 @@ jinqs.Core.addMethods({
   ///  outerJoin        - Indicates whether elements from the current sequence with no matching elements should be returned.
   join: function(source, inner, outerKeySelector, innerKeySelector, resultSelector, outerJoin) {
     var innerKeys = null;
-    return this.select(function(item) {
+    return this.selectMany(function(item) {
       if (innerKeys === null) { innerKeys = new jinqs.Core(inner).toLookup(innerKeySelector); }
       var key = (outerKeySelector ? outerKeySelector(item) : item);
       var result = [];
@@ -660,6 +673,6 @@ jinqs.Core.addMethods({
         result.push(resultSelector ? resultSelector(item, innerItem) : [item, innerItem]);
       }
       return result;
-    }).selectMany();
+    });
   }
 });

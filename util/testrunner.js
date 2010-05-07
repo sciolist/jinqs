@@ -11,8 +11,8 @@ var test = {
   modules: { },
   
   that: function(name, method) {
-	  if(!test.modules[test.moduleName]) test.modules[test.moduleName] = [];
-	  test.modules[test.moduleName].push({ name: name, method: method });
+    if(!test.modules[test.moduleName]) test.modules[test.moduleName] = [];
+    test.modules[test.moduleName].push({ name: name, method: method });
   }
 }
 
