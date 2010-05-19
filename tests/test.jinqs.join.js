@@ -105,6 +105,32 @@ exports.run = function(test) {
     assert.equal(set[0][1].length, 0);
   });
 
+  // zip(sequence, predicate)
+  test.that("zip: should iterate arrays", function() {
+    var a = [0, 1, 2];
+    var b = [9, 8, 7];
+    
+    var c = jinqs.over(a).zip(b).toArray();
+    assert.deepEqual(c, [[0, 9], [1, 8], [2, 7]]);
+  });
+  
+  test.that("zip: should iterate all elements from the first sequence", function() {
+    var a = [0, 1, 2];
+    var b = [];
 
+    var c = jinqs.over(a).zip(b).toArray();
+    assert.equal(c[0][0], 0); assert.equal(c[0][1], null);
+    assert.equal(c[1][0], 1); assert.equal(c[1][1], null);
+    assert.equal(c[2][0], 2); assert.equal(c[2][1], null);
+  });
+  
+  test.that("zip: should stop iterating at end of first sequence", function() {
+    var a = [0, 1];
+    var b = [9, 8, 7];
+
+    var c = jinqs.over(a).zip(b).toArray();
+    assert.deepEqual(c, [[0, 9], [1, 8]]);
+  });
+  
   // union(inner, keySelector)
 };

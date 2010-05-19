@@ -15,7 +15,9 @@ if(typeof exports != "undefined") {
   if(!jinqs.Enumerator) { try { jinqs.Enumerator = require('./enumerator').jinqs.Enumerator; } catch(e) { } } // this could be included after in a compressed file.
   if(!jinqs.quickSort) { try { jinqs.quickSort = require('./quickSort').jinqs.quickSort; } catch(e) { } } // this could be included after in a compressed file.
   exports.jinqs = jinqs;
-  exports.over = jinqs.over;
+  for(var key in jinqs) {
+    if(jinqs.hasOwnProperty(key)) exports[key] = jinqs[key];
+  }
 }
 
 /// Class: jinqs.Core
@@ -134,7 +136,7 @@ jinqs.Core.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance that will sort the data on initialization.
+  ///  An enumeration that will sort the data on initialization.
   orderBy: function(source, keySelector, comparer) {
     if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     
@@ -165,7 +167,7 @@ jinqs.Core.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance that will sort the data in descending order on initialization.
+  ///  An enumeration that will sort the data in descending order on initialization.
   orderByDesc: function(source, keySelector, comparer) {
     if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     return source.orderBy(keySelector, function(a, b){ return -comparer(a, b); });
@@ -177,7 +179,7 @@ jinqs.Core.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance that will sort the data on initialization.
+  ///  An enumeration that will sort the data on initialization.
   thenBy: function(source, keySelector, comparer) {
     if(!source.orderByComparer) { return source.orderBy(keySelector, comparer); }
     if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
@@ -202,7 +204,7 @@ jinqs.Core.addMethods({
   ///  keySelector - A method with extracts a key from the element to sort the data on. (optional)
   ///  comparer    - A comparison method which takes two elements and returns a sorting direction. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance that will sort the data in descending order on initialization.
+  ///  An enumeration that will sort the data in descending order on initialization.
   thenByDesc: function(source, keySelector, comparer) {
     if(!comparer) { comparer = jinqs.quickSort.defaultComparer; }
     return source.thenBy(keySelector, function(a, b){ return -comparer(a, b); });
@@ -244,7 +246,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  uniqueKeySelector - A method to extract the key to judge distinctness by. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance over all distinct elements that were found.
+  ///  An enumeration over all distinct elements that were found.
   distinct: function(source, uniqueKeySelector) {
     return new jinqs.Core({
       first: function() {
@@ -281,7 +283,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  transform - A transform function to apply to each element of the sequence.
   /// Returns:
-  ///  A <jinqs.Core> instance over the mapped results of the sequence.
+  ///  An enumeration over the mapped results of the sequence.
   select: function(source, transform) {
     if(!transform) { return new jinqs.Core(source); }
     
@@ -302,7 +304,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  selector - A transform function to apply to each element of the sequence. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance over the flattened and mapped results of the sequence.
+  ///  An enumeration over the flattened and mapped results of the sequence.
   selectMany: function(source, transform) {
     return new jinqs.Core({
       first: function() { this.i = 0; this.inner = source.select(transform).getEnumerator(); },
@@ -323,7 +325,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  sequence - The sequence to be concatenate into the result, this can be any enumerable source.
   /// Returns:
-  ///  A <jinqs.Core> instance over the concatenated elements of the sequence.
+  ///  An enumeration over the concatenated elements of the sequence.
   concat: function(source, sequence) {
     if(!sequence) { return new jinqs.Core(source); }
     
@@ -345,7 +347,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  predicate - A function to test whether an element should be included.
   /// Returns:
-  ///  A <jinqs.Core> instance over the filtered elements.
+  ///  An enumeration over the filtered elements.
   where: function(source, predicate) {
     if(!predicate) { return new jinqs.Core(source); }
     
@@ -397,7 +399,7 @@ jinqs.Core.addMethods({
   /// Method: reverse
   ///  Inverts the order of the elements in the sequence.
   /// Returns:
-  ///  A <jinqs.Core> instance over the elements in the current sequence in reverse order.
+  ///  An enumeration over the elements in the current sequence in reverse order.
   reverse: function(source) {
     return new jinqs.Core({
       first: function() {
@@ -407,7 +409,7 @@ jinqs.Core.addMethods({
         while(enumr.moveNext()) {
           arr.unshift(enumr.current());
         }
-        this.inner = new jinqs.Enumerator(arr);
+        this.inner =jinqs.Enumerator.over(arr);
       },
       moveNext: function(done) {
         while(this.inner.moveNext()) {
@@ -423,7 +425,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  predicate - A function to test each element against.
   /// Returns:
-  ///  A <jinqs.Core> instance over the elements before the predicate stopped matching.
+  ///  An enumeration over the elements before the predicate stopped matching.
   takeWhile: function(source, predicate) {
     if(!predicate) { return new jinqs.Core(this.data); }
     return new jinqs.Core({
@@ -444,7 +446,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  predicate - A function to test each element against.
   /// Returns:
-  ///  A <jinqs.Core> instance over the elements after the predicate stopped matching.
+  ///  An enumeration over the elements after the predicate stopped matching.
   skipWhile: function(source, predicate) {
     if(!predicate) { return new jinqs.Core(this.data); }
     return new jinqs.Core({
@@ -472,7 +474,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  count - The maximum number of elements to return.
   /// Returns:
-  ///  A <jinqs.Core> instance over the supplied amount of elements from the sequence.
+  ///  An enumeration over the supplied amount of elements from the sequence.
   take: function(source, count) {
     return new jinqs.Core({
       first: function() {
@@ -492,7 +494,7 @@ jinqs.Core.addMethods({
   /// Parameters:
   ///  count - The maximum number of elements to skip.
   /// Returns:
-  ///  A <jinqs.Core> instance over the elements after those that were skipped.
+  ///  An enumeration over the elements after those that were skipped.
   skip: function(source, count) {
     return new jinqs.Core({
       first: function() {
@@ -503,6 +505,31 @@ jinqs.Core.addMethods({
       moveNext: function() {
         while(this.i++ < count) { this.inner.moveNext(); }
         return this.inner.moveNext();
+      }
+    });
+  },
+  
+  /// Method: zip
+  ///  Merges elements from the sequence with a secondary source.
+  /// Parameters:
+  ///  sequence - The sequence to be merge into the source, this can be any enumerable source.
+  ///  predicate - An optional method that receives the elements from the first and second source, and returns a result value.
+  /// Returns:
+  ///  An enumeration over the results of the zip operation.
+  zip: function(source, sequence, predicate) {
+    return new jinqs.Core({
+      first: function() {
+        this.inner = jinqs.over(source).getEnumerator();
+        this.outer = jinqs.over(sequence).getEnumerator();
+      },
+      moveNext: function() {
+        this.outer.moveNext();
+        return this.inner.moveNext();
+      },
+      current: function() {
+        var innerKey = this.inner.current();
+        var outerKey = this.outer.current();
+        return predicate ? predicate(innerKey, outerKey) : [innerKey, outerKey];
       }
     });
   },
@@ -585,7 +612,7 @@ jinqs.Core.addMethods({
   ///  innerKeySelector - A function to extract the key from the inner sequence. (optional)
   ///  resultSelector   - A function that creates a result from the outer element and an array of inner results. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance over the joined results of the sequences.
+  ///  An enumeration over the joined results of the sequences.
   groupJoin: function(source, inner, outerKeySelector, innerKeySelector, resultSelector) {
     var grouper = function(item) { return outerKeySelector(item[0]); };
     var joined = source.join(inner, outerKeySelector, innerKeySelector, null, true);
@@ -605,7 +632,7 @@ jinqs.Core.addMethods({
   ///  keySelector - A function to extract the key from an element.
   ///  resultSelector - A function that creates a result for each group. (optional)
   /// Returns:
-  ///  A <jinqs.Core> instance where each value is a group of elements with matching keys.
+  ///  An enumeration where each value is a group of elements with matching keys.
   groupBy: function(source, keySelector, resultSelector) {
     return new jinqs.Core({
       reset: function() {
@@ -632,7 +659,7 @@ jinqs.Core.addMethods({
   ///  inner       - The sequence to be joined, this can be any enumerable source.
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
-  ///  A <jinqs.Core> instance over each distinct value from the sequences.
+  ///  An enumeration over each distinct value from the sequences.
   union: function(source, inner, keySelector) {
     return source.concat(inner, keySelector).distinct(keySelector);
   },
@@ -643,7 +670,7 @@ jinqs.Core.addMethods({
   ///  inner       - The sequence to be joined, this can be any enumerable source.
   ///  keySelector - A function to extract the key from an element.
   /// Returns:
-  ///  A <jinqs.Core> instance over each distinct value that exists in both sequences.
+  ///  An enumeration over each distinct value that exists in both sequences.
   intersect: function(source, inner, keySelector) {
     return source.join(inner, keySelector, keySelector, function(a, b) { return a; }).distinct(keySelector);
   },
