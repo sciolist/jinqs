@@ -187,8 +187,8 @@ jinqs.Core.addMethods({
     var oldMethod = source.orderByMethod;
     var oldComparer = source.orderByComparer;
     var newComparer = function(a, b, dataA, dataB) {
-      var oldA = oldMethod(dataA[1]);
-      var oldB = oldMethod(dataB[1]);
+      var oldA = oldMethod ? oldMethod(dataA[1]) : dataA[1];
+      var oldB = oldMethod ? oldMethod(dataB[1]) : dataB[1];
       var result = oldComparer(oldA, oldB, dataA, dataB);
       if(result === 0) {
         result = comparer(a, b, dataA, dataB);
@@ -458,7 +458,7 @@ jinqs.Core.addMethods({
       moveNext: function(done) {
         while(this.inner.moveNext()) {
           var item = this.inner.current();
-          if(!skipping) { return item; }
+          if(!this.skipping) { return item; }
           if(predicate(item, this.i++)) { continue; }
           
           this.skipping = false;

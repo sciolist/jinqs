@@ -3,6 +3,15 @@ var jinqs = require('./../src/jinqs');
 
 exports.run = function(test) {
   // concat(sequence)
+  test.that("concat: should enumerate over both sequences.", function() {
+    var a = [0, 1];
+    var b = [2, 3];
+    
+    var c = jinqs.over(a).concat(b).toArray();
+    assert.deepEqual(c, [0, 1, 2, 3]);
+  });
+  
+  
   // intersect(inner, keySelector)
   test.that("intersect: should return nothing if any side is empty.", function() {
     var a = jinqs.over([1,2,3]);
@@ -133,4 +142,11 @@ exports.run = function(test) {
   });
   
   // union(inner, keySelector)
+  test.that("union: should create an intersection concatenation.", function() {
+    var a = [0, 1, 2];
+    var b = [1, 2, 3];
+    
+    var c = jinqs.over(a).union(b).toArray();
+    assert.deepEqual(c, [0, 1, 2, 3]);
+  });
 };

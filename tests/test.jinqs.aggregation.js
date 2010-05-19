@@ -14,7 +14,27 @@ exports.run = function(test) {
   });
 
   // average(selector)
+  test.that("average: should average values.", function() {
+    var j = jinqs.over([0, 0, 5, 5]);
+    assert.equal(j.average(), 2.5);
+  });
+  
+  test.that("average: should average values from selector.", function() {
+    var j = jinqs.over([0, 0, 5, 5]);
+    assert.equal(j.average(function(v){ return v * 2; }), 5);
+  });
+
   // count(predicate)
+  test.that("count: should fetch amount of items in sequence.", function() {
+    var j = jinqs.over([0, 1, 2, 3]);
+    assert.equal(j.count(), 4);
+  });
+  
+  test.that("count: should fetch amount of items in sequence matching predicate.", function() {
+    var j = jinqs.over([0, 1, 2, 3]);
+    assert.equal(j.count(function(v){return v%2==0;}), 2);
+  });
+  
   // min(selector)
   test.that("min: should fetch lowest available value.", function() {
     var j = jinqs.over([2,3,4,3,2])

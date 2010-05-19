@@ -27,7 +27,6 @@ exports.run = function(test) {
 
 
   // where(predicate)
-
   test.that("where: repeat wheres should filter subset.", function()
   {
     var arr = [0,9,1,0,2];
@@ -58,6 +57,18 @@ exports.run = function(test) {
   });
 
   // skipWhile(predicate)
+  test.that("skipWhile: should stop at end of data.", function() {
+    var arr = [0,9,1,0,2];
+    var j = jinqs.over(arr);
+    assert.deepEqual(j.skipWhile(function(){return true;}).toArray(), []);
+  });
+  test.that("skipWhile: should start after finding a match.", function() {
+    var arr = [0,9,1,0,2];
+    
+    var j = jinqs.over(arr).skipWhile(function(v){return v<=0}).toArray();
+    assert.deepEqual(j, [9,1,0,2]);
+  });
+  
   // take(count)
   test.that("take: should repeatedly cut.", function() {
     var arr = [0,9,1,0,2];
@@ -99,6 +110,4 @@ exports.run = function(test) {
     var j = jinqs.over(arr);
     assert.deepEqual(j.takeWhile(function(){return true;}).toArray(), arr);
   });
-
-  // reset()
 };
