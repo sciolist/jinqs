@@ -1,6 +1,6 @@
 require 'fileutils'
 require 'rake/clean'
-sources = ["src/enumerator.js", "src/quicksort.js", "src/jinqs.js"]
+sources = ["lib/jinqs/enumerator.js", "lib/jinqs/quicksort.js", "lib/jinqs/jinqs.js", "lib/jinqs.js"]
 version = File.read("VERSION").strip
 CLEAN.include('out')
 directory "out"

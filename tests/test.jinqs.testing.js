@@ -1,5 +1,5 @@
 var assert = require('assert');
-var jinqs = require('./../src/jinqs');
+var jinqs = require('./../lib/jinqs');
 
 exports.run = function(test) {
   // all(predicate)

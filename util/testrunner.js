@@ -18,11 +18,13 @@ var test = {
 
 var allTestCount = 0;
 var allTestSuccess = 0;
+var filesLoaded = 0;
 
 files.forEach(function(file) {
   try {
    test.moduleName = file;
    require('../' + file.replace(/\.js$/,"")).run(test);
+   filesLoaded++;
   } catch(e) {
    sys.puts(red(bold("\nCould not load " + file)));
    sys.puts(gray(bold(e.stack))); 
@@ -60,10 +62,17 @@ for(var key in test.modules) {
 };
 
 
+var level = 0;
 sys.puts("\n\nTest complete")
 if(allTestSuccess == allTestCount)
   sys.puts(green(allTestSuccess + " of " + allTestCount + " passed."));
 else {
   sys.puts(bold(red(allTestSuccess + " of " + allTestCount + " passed.")));
-  process.exit(1);
+  level = 1;
 }
+if(files.length != filesLoaded) {
+  sys.puts(bold(red(filesLoaded + " of " + files.length + " test files executed.")));
+  level = 1;
+}
+
+process.exit(level);
