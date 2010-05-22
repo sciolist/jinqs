@@ -1,0 +1,10 @@
+{
+  "name": "jinqs",
+  "description": "Linq-like data querying library",
+  "version": "0.1.3",
+  "keywords": ["linq", "linq-like", "data-querying"],
+  "directories": {
+    "lib": "lib"
+  },
+  "engines": { "node": ">= 0.1.93" }
+}
