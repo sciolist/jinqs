@@ -75,6 +75,7 @@ exports.run = function(test) {
     var j = jinqs.over(arr);
     var taken = j.take(2);
     assert.deepEqual(taken.toArray(), [0,9]);
+    assert.deepEqual(taken.toArray(), [0,9]);
   });
 
   test.that("take&skip: should work in a paging scenario.", function() {
