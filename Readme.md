@@ -7,7 +7,7 @@ providing helpers for traversing, sorting, mapping and aggregating information i
 A typical Jinqs query looks something like
 
     closest = jinqs.over(markers).orderBy(function(m) { return target.distanceFrom(m.getLatLng()); })
-                             .take(10).toArray();
+                                 .take(10).toArray();
 
 which iterates a set of [Google Maps](http://code.google.com/apis/maps/) markers 
 and returns the 10 closest to a target location.
@@ -20,8 +20,8 @@ The majority of Jinqs methods create shells around enumerable iterators which de
 If you write a deferring Jinq query such as:
 
     var j = jinqs.over([0,1,2,3,4]).where(function(v, i)  { return v > 2; })
-                               .select(function(v) { return v * v; })
-                               .min(); //> 9
+                                   .select(function(v) { return v * v; })
+                                   .min(); //> 9
 
 you will end up with an enumerable source, which when invoked will poll the "select" iterator for its next valid member,
 which in turn polls upwards to the "where" iterator. 
@@ -198,6 +198,10 @@ Union finds and returns all values that are distinct among two sources.
 
     jinqs.over([0,1,2]).union([1,2,3]); //> [0,1,2,3]
 
+#### zip(sequence, predicate)
+Merges elements from the source with a secondary sequence, the optional predicate takes the value from both sources and returns a result value.
+
+    jinqs.over([0,1,2]).zip([3,4,5]).toArray(); // [[0,3],[1,4],[2,5]]
 
 ### Sorting
 
