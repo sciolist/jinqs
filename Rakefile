@@ -18,6 +18,10 @@ task :test => sources do |t|
   sh "node", "util/testrunner.js", Dir["tests/**/test.*.js"].join(" ")
 end
 
+task :release do
+  sh "kiwi", "publish jinqs #{version}"
+end
+
 task :build => ["out/jinqs-#{version}.min.js"] do
   cp_r 'Readme.md', 'out/Readme.md'
   cp_r 'LICENSE', 'out/LICENSE'
