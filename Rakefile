@@ -7,7 +7,7 @@ directory "out"
 
 file "out/jinqs-#{version}.min.js" => ["out"] + sources do |t|
   puts "making #{t}"	
-  require 'util/jsmin'
+  require './util/jsmin'
   File.open t.to_s, "w" do |f|
     f.write "/*#{File.read("LICENSE")}*/\n"
     f.write JSMin.minify(sources)
